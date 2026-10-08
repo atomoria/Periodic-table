@@ -427,7 +427,6 @@ h1 {
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: visible;
 }
 
 .electron-shell {
@@ -1785,6 +1784,7 @@ function buildTable() {
 ========================================================= */
 
 function createElectronDiagram(element) {
+    window.currentSelectedElement = element;
 
     electronDiagram.innerHTML = "";
     shellInfo.innerHTML = "";
@@ -1827,15 +1827,14 @@ function createElectronDiagram(element) {
        Shell diameters.
     */
 
-    const sizes = [
-        78,
-        116,
-        154,
-        192,
-        230,
-        268,
-        304
-    ];
+    // Fit the entire orbit AND the electron dots inside the available panel.
+    // The outermost electron is 16px wide including its border; reserve
+    // another 8px for glow and breathing room on each side.
+    const available = electronDiagram.getBoundingClientRect().width;
+    const maxDiameter = Math.max(100, available - 32);
+    const scale = Math.min(1, maxDiameter / 304);
+    const sizes = [78, 116, 154, 192, 230, 268, 304]
+        .map(diameter => diameter * scale);
 
 
     shells.forEach(
@@ -1859,13 +1858,11 @@ function createElectronDiagram(element) {
                     )
                 ];
 
-            // Fit all shells proportionally inside the available diagram width.
-            // Reserve 36px for electron dots, outlines and glow at the edge.
-            // CSS percentages track the diagram when the mobile layout resizes.
-            const ratio = size / sizes[sizes.length - 1];
-            const shellDiameter = `calc(${(ratio * 100).toFixed(3)}% - ${(ratio * 36).toFixed(2)}px)`;
-            shell.style.width = shellDiameter;
-            shell.style.height = shellDiameter;
+            shell.style.width =
+                `${size}px`;
+
+            shell.style.height =
+                `${size}px`;
 
 
             /*
@@ -1958,6 +1955,17 @@ function createElectronDiagram(element) {
     );
 }
 
+
+// Keep shell sizing correct when the information panel changes width.
+let lastDiagramWidth = 0;
+const diagramResizeObserver = new ResizeObserver(entries => {
+    const width = entries[0].contentRect.width;
+    if (Math.abs(width - lastDiagramWidth) > 1) {
+        lastDiagramWidth = width;
+        if (window.currentSelectedElement) createElectronDiagram(window.currentSelectedElement);
+    }
+});
+diagramResizeObserver.observe(electronDiagram);
 
 /* =========================================================
    SELECT ELEMENT
