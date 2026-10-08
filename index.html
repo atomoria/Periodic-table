@@ -717,6 +717,52 @@ h1 {
 .configuration-copy:hover { background: #e6d5c0; }
 .configuration-note { margin: 8px 0 0; color: #796458; font-size: .73rem; line-height: 1.5; }
 
+
+/* ===== Traditional Japanese / washi board redesign ===== */
+:root {
+    --bg: #eee3cf;
+    --panel: #faf3e5;
+    --panel-2: #f5e8d1;
+    --border: #bda982;
+    --text: #302c35;
+    --muted: #746b63;
+    --accent: #8e353c;
+    --accent-soft: rgba(142,53,60,.11);
+}
+body {
+    background-color: #eee3cf;
+    background-image: radial-gradient(ellipse at 8% 5%, rgba(255,255,255,.72), transparent 40%),
+      repeating-linear-gradient(0deg, rgba(92,71,48,.018) 0 1px, transparent 1px 5px),
+      repeating-linear-gradient(90deg, rgba(92,71,48,.014) 0 1px, transparent 1px 7px);
+    color: var(--text);
+}
+header { padding-top: 30px; }
+.header-top { border-bottom: 2px solid #bda982; padding-bottom: 18px; position: relative; }
+.header-top::after { content: '和'; position: absolute; right: 4px; top: 0; width: 40px; height: 40px; display: grid; place-items: center; background: #9c343d; color: #fff8e9; font: bold 23px Georgia,serif; border-radius: 3px; box-shadow: 2px 2px 0 #d6b984; }
+h1 { font-family: Georgia, 'Times New Roman', serif; letter-spacing: .025em; color: #283e4a; padding-right: 50px; }
+.subtitle { color: #71665e; font-family: Georgia,serif; }
+.search-area { margin: 20px 0 23px; }
+.search-area input { background: #fffaf0; border: 1px solid #c5b18c; color: #302c35; box-shadow: inset 0 1px 3px rgba(76,57,37,.06); }
+.search-area input::placeholder { color: #85796d; }
+.search-area input:focus { border-color: #9c343d; box-shadow: 0 0 0 3px rgba(156,52,61,.11); }
+.clear-btn { background: #284b58; color: #fff7e7; border-color: #284b58; }
+.clear-btn:hover { background: #376575; }
+.table-panel { background: rgba(255,250,240,.8); border: 2px solid #c8b18b; border-radius: 15px; padding: 17px; box-shadow: 0 12px 30px rgba(72,50,32,.11); position: relative; }
+.table-panel::before { content: '元素一覧  ·  THE ELEMENTS'; display: block; margin: 0 0 16px; padding: 0 0 11px; border-bottom: 1px solid #d6c5a6; font: 700 .88rem Georgia,serif; letter-spacing: .12em; color: #73563f; }
+.table-scroll { scrollbar-color: #b99a71 #f3e6cf; }
+.periodic-table { gap: 5px; }
+.element { border: 1px solid rgba(248,225,178,.55); border-radius: 5px; box-shadow: inset 0 0 0 1px rgba(17,27,36,.16), 0 2px 3px rgba(30,30,30,.14); }
+.element::after { content: ''; position: absolute; inset: 3px; border: 1px solid rgba(255,245,216,.17); border-radius: 2px; pointer-events: none; }
+.element:hover, .element:focus-visible { transform: translateY(-3px); border-color: #f5d694; box-shadow: 0 5px 13px rgba(61,41,28,.26), inset 0 0 0 1px #f5d694; }
+.element-symbol { font-family: Georgia,'Times New Roman',serif; }
+.f-label { border-radius: 5px; }
+.legend { border-top: 1px solid #d6c5a6; padding-top: 15px; }
+.legend button { background: #f8eedc; color: #55483f; border-color: #cdb894; font-family: Georgia,serif; font-size: .77rem; }
+.legend button:hover, .legend button.active { background: #284b58; color: #fff8e9; border-color: #284b58; }
+.info-panel { border-color: #c6aa77; box-shadow: 0 12px 30px rgba(72,50,32,.13); }
+@media (max-width: 1000px) { .table-panel { padding: 12px; } }
+@media (max-width: 600px) { .header-top::after { width: 33px; height: 33px; font-size: 19px; } .table-panel::before { font-size: .76rem; } }
+
 </style>
 </head>
 
