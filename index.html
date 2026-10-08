@@ -124,8 +124,8 @@ h1 {
 
 .main-layout {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 360px;
-    gap: 22px;
+    grid-template-columns: minmax(0, 1fr) 300px;
+    gap: 14px;
     align-items: start;
 }
 
@@ -144,17 +144,17 @@ h1 {
 
 .periodic-table {
     display: grid;
-    grid-template-columns: repeat(18, minmax(58px, 1fr));
-    grid-template-rows: repeat(9, 78px);
+    grid-template-columns: repeat(18, minmax(47px, 1fr));
+    grid-template-rows: repeat(9, 72px);
     gap: 5px;
-    min-width: 1120px;
+    min-width: 930px;
 }
 
 .element {
     position: relative;
     border: 1px solid rgba(255,255,255,.14);
     border-radius: 9px;
-    padding: 7px;
+    padding: 5px;
     color: white;
     min-width: 0;
     transition:
@@ -301,7 +301,7 @@ h1 {
     background: rgba(15,21,29,.95);
     border: 1px solid var(--border);
     border-radius: 15px;
-    padding: 22px;
+    padding: 16px;
     position: sticky;
     top: 18px;
     scroll-margin-top: 20px;
@@ -574,6 +574,115 @@ h1 {
         width: min(290px, 100%);
     }
 }
+
+/* Japanese textile-inspired element information panel */
+.info-panel {
+    --japan-ink: #32665d;
+    --japan-base: #5b8c81;
+    --japan-light: #f5e5c8;
+    background: #f8f1e5;
+    color: #302838;
+    border: 2px solid #d5b984;
+    box-shadow: 0 16px 40px rgba(0,0,0,.24);
+    overflow: hidden;
+}
+.info-panel .info-label {
+    color: #866540;
+    font-family: Georgia, serif;
+    letter-spacing: .17em;
+}
+.info-panel .info-heading {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 22px 14px;
+    margin: 12px 0 16px;
+    border-radius: 12px;
+    border: 3px double rgba(255,255,255,.72);
+    color: #fffdf7;
+    text-align: center;
+    background-image: linear-gradient(145deg, rgba(28,20,32,.08), rgba(28,20,32,.30)), url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22144%22%20height%3D%22144%22%20viewBox%3D%220%200%20144%20144%22%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%22.24%22%20stroke-width%3D%222%22%3E%3Cpath%20d%3D%22M-36%2048a36%2036%200%200%201%2072%200m-54%200a18%2018%200%200%201%2036%200M36%2048a36%2036%200%200%201%2072%200M54%2048a18%2018%200%200%201%2036%200M108%2048a36%2036%200%200%201%2072%200M-36%20120a36%2036%200%200%201%2072%200m-54%200a18%2018%200%200%201%2036%200M36%20120a36%2036%200%200%201%2072%200M54%20120a18%2018%200%200%201%2036%200M108%20120a36%2036%200%200%201%2072%200%22%2F%3E%3C%2Fg%3E%3Cg%20fill%3D%22%23fff%22%20fill-opacity%3D%22.17%22%20transform%3D%22translate%2872%2083%29%22%3E%3Cellipse%20rx%3D%227%22%20ry%3D%2217%22%20transform%3D%22rotate%280%29%20translate%280%20-10%29%22%2F%3E%3Cellipse%20rx%3D%227%22%20ry%3D%2217%22%20transform%3D%22rotate%2872%29%20translate%280%20-10%29%22%2F%3E%3Cellipse%20rx%3D%227%22%20ry%3D%2217%22%20transform%3D%22rotate%28144%29%20translate%280%20-10%29%22%2F%3E%3Cellipse%20rx%3D%227%22%20ry%3D%2217%22%20transform%3D%22rotate%28216%29%20translate%280%20-10%29%22%2F%3E%3Cellipse%20rx%3D%227%22%20ry%3D%2217%22%20transform%3D%22rotate%28288%29%20translate%280%20-10%29%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E");
+    background-color: var(--japan-base);
+    background-size: auto, 144px 144px;
+    box-shadow: 0 8px 18px rgba(60,34,44,.2);
+}
+.info-panel .big-symbol {
+    margin: auto;
+    width: 106px;
+    height: 106px;
+    border: 3px double #fff7e5;
+    border-radius: 18px;
+    background: var(--japan-ink);
+    color: #fff9ec;
+    font-family: Georgia, serif;
+    font-size: 3.5rem;
+    box-shadow: 0 6px 0 rgba(0,0,0,.16);
+}
+.info-panel .info-heading h2 {
+    font-family: Georgia, 'Times New Roman', serif;
+    text-transform: uppercase;
+    letter-spacing: .055em;
+    font-size: clamp(1.35rem, 2vw, 1.85rem);
+    overflow-wrap: anywhere;
+    text-shadow: 0 2px 3px rgba(0,0,0,.28);
+}
+.info-panel .info-heading p {
+    color: #fff7de;
+    font-weight: 700;
+}
+.info-panel .info-card {
+    background: #fffaf0;
+    border: 1px solid #e1d2b6;
+    border-radius: 8px;
+}
+.info-panel .info-card-label { color: #7a675d; }
+.info-panel .info-card-value { color: #3c3040; }
+.info-panel .electron-section {
+    border-top: 1px solid #cdb994;
+}
+.info-panel .section-title strong { color: #503c48; }
+.info-panel .valence-badge {
+    background: #efe0ef;
+    color: #633e65;
+    border-color: #cfaed1;
+}
+.info-panel .shell-count {
+    background: #fffaf0;
+    border-color: #dbc8a7;
+    color: #5e4b52;
+}
+.info-panel .shell-count.outer {
+    background: #ead5eb;
+    color: #62356b;
+    border-color: #cda7d1;
+}
+.info-panel .description {
+    background: #fffaf0;
+    color: #463843;
+    border-left: 4px solid var(--japan-base);
+    padding: 13px;
+    border-radius: 5px;
+    font-family: Georgia, serif;
+    font-size: .94rem;
+    line-height: 1.6;
+}
+.info-panel .back-btn {
+    background: var(--japan-ink);
+    border-color: var(--japan-ink);
+    color: #fff9eb;
+}
+.info-panel .back-btn:hover { background: var(--japan-base); color: white; }
+@keyframes japaneseReveal {
+    from { opacity: .65; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.info-panel .info-heading.reveal { animation: japaneseReveal .4s ease-out; }
+@media (prefers-reduced-motion: reduce) {
+    .info-panel .info-heading.reveal { animation: none; }
+}
+
 </style>
 </head>
 
@@ -1510,7 +1619,7 @@ function getPosition(element) {
    CREATE ELEMENT CARD
 ========================================================= */
 
-function createElementCard(element) {
+function createElementCard(element, allowUnpositioned = false) {
 
     const button = document.createElement("button");
 
@@ -1521,12 +1630,14 @@ function createElementCard(element) {
 
     const position = getPosition(element);
 
-    if (!position) {
+    if (!position && !allowUnpositioned) {
         return null;
     }
 
-    button.style.gridRow = position.row;
-    button.style.gridColumn = position.col;
+    if (position) {
+        button.style.gridRow = position.row;
+        button.style.gridColumn = position.col;
+    }
 
     button.dataset.number = element.n;
     button.dataset.name = element.name.toLowerCase();
@@ -1613,7 +1724,7 @@ function buildTable() {
         .forEach((element, index) => {
 
             const card =
-                createElementCard(element);
+                createElementCard(element, true);
 
             if (!card) return;
 
@@ -1634,7 +1745,7 @@ function buildTable() {
         .forEach((element, index) => {
 
             const card =
-                createElementCard(element);
+                createElementCard(element, true);
 
             if (!card) return;
 
@@ -1829,6 +1940,26 @@ function createElectronDiagram(element) {
 ========================================================= */
 
 function selectElement(element) {
+    const japanesePalettes = {
+        alkali: ["#b54b4b", "#802e3a"],
+        alkaline: ["#c17a36", "#805128"],
+        transition: ["#456d88", "#25465d"],
+        "post-transition": ["#64856b", "#3d604c"],
+        metalloid: ["#8c6eac", "#60477c"],
+        nonmetal: ["#5b8c81", "#32665d"],
+        halogen: ["#b66a92", "#7c426d"],
+        noble: ["#a36caa", "#713a7d"],
+        lanthanide: ["#bf7a8e", "#88495e"],
+        actinide: ["#aa6751", "#774235"]
+    };
+    const palette = japanesePalettes[element.category] || japanesePalettes.nonmetal;
+    infoPanel.style.setProperty("--japan-base", palette[0]);
+    infoPanel.style.setProperty("--japan-ink", palette[1]);
+    const japaneseHeader = infoPanel.querySelector(".info-heading");
+    japaneseHeader.classList.remove("reveal");
+    void japaneseHeader.offsetWidth;
+    japaneseHeader.classList.add("reveal");
+
 
     /*
        Update information panel.
