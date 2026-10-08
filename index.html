@@ -1007,6 +1007,37 @@ html[lang="vi"] .info-panel .description {
 .encyclopedia .fact span:last-child{text-align:right}
 .encyclopedia a{color:#b7dfff;text-decoration:underline;text-underline-offset:3px}
 .encyclopedia .review-status{font-size:.84rem;color:#c9c0ad}
+
+/* Moonlit hybrid: full-width periodic table + slide-out quick view + expanded reader */
+.main-layout{display:block!important;position:relative}
+.table-panel{width:100%;max-width:none}
+.panel-backdrop{position:fixed;inset:0;background:rgba(2,8,18,.54);backdrop-filter:blur(2px);z-index:1998;opacity:0;visibility:hidden;transition:opacity .25s,visibility .25s}
+body.panel-open .panel-backdrop{opacity:1;visibility:visible}
+#infoPanel.info-panel{position:fixed!important;right:0!important;left:auto!important;top:0!important;bottom:0!important;z-index:1999;width:min(460px,100vw)!important;max-width:none!important;height:100dvh!important;overflow-y:auto;overscroll-behavior:contain;transform:translateX(105%);transition:transform .32s ease,width .32s ease;box-sizing:border-box;margin:0!important;border-radius:18px 0 0 18px!important;scrollbar-width:thin;scrollbar-color:#a78453 #101b2a;order:unset!important}
+body.panel-open #infoPanel{transform:translateX(0)}
+body.panel-expanded #infoPanel{width:min(850px,100vw)!important}
+body.panel-expanded #infoPanel .info-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+body.panel-expanded #infoPanel .info-heading{min-height:255px}
+#infoPanel .panel-toolbar{position:sticky;top:-15px;z-index:20;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px 4px 12px;background:linear-gradient(#101c2b 85%,#101c2bdf);border-bottom:1px solid #987c5377;margin-bottom:12px}
+.panel-eyebrow{font-size:.72rem;letter-spacing:.14em;font-weight:700;color:#e7c58d}
+.panel-actions{display:flex;align-items:center;gap:7px}
+#infoPanel .panel-action{font:600 .78rem Arial,'Noto Sans',sans-serif;cursor:pointer;border:1px solid #a88959;border-radius:9px;padding:9px 11px;background:#23354a;color:#f9e5bd;white-space:nowrap}
+#infoPanel .panel-action:hover,#infoPanel .panel-action:focus-visible{background:#37506a;outline:2px solid #e2b777;outline-offset:2px}
+#infoPanel .panel-action.primary{background:#a47b44;color:#0c1725;border-color:#e5be79}
+#infoPanel .panel-action.icon-action{font-size:1rem;padding:7px 11px}
+/* In quick view, hide deep reading content; keep atomic model and overview accessible. */
+body:not(.panel-expanded) #infoPanel .encyclopedia{display:none}
+body:not(.panel-expanded) #infoPanel .configuration-section{display:none}
+body:not(.panel-expanded) #infoPanel .info-heading{min-height:210px}
+body:not(.panel-expanded) #infoPanel .info-heading::before{font-size:clamp(2.4rem,4vw,3.5rem)}
+body:not(.panel-expanded) #infoPanel .big-symbol{width:90px;height:90px;font-size:2.8rem}
+body:not(.panel-expanded) #infoPanel .info-card{padding:10px}
+body:not(.panel-expanded) #infoPanel .electron-section{margin-top:12px}
+#infoPanel #backButton{display:none}
+body.panel-open{overflow:hidden}
+@media(max-width:600px){#infoPanel.info-panel{width:100vw!important;border-radius:0!important;padding:12px!important}#infoPanel .panel-toolbar{top:-12px}.panel-eyebrow{display:none}body.panel-expanded #infoPanel .info-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(prefers-reduced-motion:reduce){#infoPanel.info-panel,.panel-backdrop{transition:none!important}}
+
 </style>
 </head>
 
@@ -1066,6 +1097,7 @@ html[lang="vi"] .info-panel .description {
 </section>
 
 
+<div id="panelBackdrop" class="panel-backdrop" aria-hidden="true"></div>
 <aside
     class="info-panel"
     id="infoPanel"
@@ -1073,6 +1105,13 @@ html[lang="vi"] .info-panel .description {
     tabindex="-1"
 >
 
+    <div class="panel-toolbar">
+      <span class="panel-eyebrow" id="panelEyebrow">ELEMENT PREVIEW</span>
+      <div class="panel-actions">
+        <button type="button" id="panelExpand" class="panel-action primary" aria-expanded="false">Explore in Detail ↗</button>
+        <button type="button" id="panelClose" class="panel-action icon-action" aria-label="Close information panel">✕</button>
+      </div>
+    </div>
     <div class="info-label">Selected element</div>
 
     <div class="info-heading">
@@ -1855,8 +1894,9 @@ function setLanguage(language) {
     currentLanguage = language;
     try { localStorage.setItem('periodic-table-language', language); } catch (e) {}
     translateStaticUI();
+    updatePanelLanguage();
     buildTable();
-    if (selectedElement) selectElement(selectedElement);
+    if (selectedElement) selectElement(selectedElement, false);
     performSearch();
     const activeCategory = document.querySelector('.legend button.active')?.dataset.category || 'all';
     if (activeCategory !== 'all') document.querySelectorAll('.element').forEach(card => {
@@ -2489,7 +2529,8 @@ function renderEncyclopedia(element) {
   });
 }
 
-function selectElement(element) {
+function selectElement(element, openPanel = true) {
+    if (openPanel) openElementPanel();
     selectedElement = element;
     const japanesePalettes = {
         alkali: ["#b54b4b", "#802e3a"],
@@ -2566,47 +2607,6 @@ function selectElement(element) {
 
     createElectronDiagram(element);
     updateConfiguration(element);
-
-
-    /*
-       Automatically move user to
-       information panel.
-    */
-
-    const isMobile =
-        window.innerWidth <= 1000;
-
-    if (isMobile) {
-
-        setTimeout(() => {
-
-            infoPanel.scrollIntoView({
-                behavior: "smooth",
-                block: "start"
-            });
-
-            setTimeout(() => {
-
-                infoPanel.focus({
-                    preventScroll: true
-                });
-
-            }, 450);
-
-        }, 50);
-
-    } else {
-
-        /*
-           On desktop the panel is already visible,
-           so only ensure it is comfortably visible.
-        */
-
-        infoPanel.scrollIntoView({
-            behavior: "smooth",
-            block: "nearest"
-        });
-    }
 
 
     /*
@@ -2747,19 +2747,50 @@ document
    BACK TO TABLE
 ========================================================= */
 
-backButton.addEventListener(
-    "click",
-    () => {
-
-        document
-            .getElementById("periodicTableSection")
-            .scrollIntoView({
-                behavior: "smooth",
-                block: "start"
-            });
-    }
-);
-
+const panelBackdrop = document.getElementById('panelBackdrop');
+const panelExpand = document.getElementById('panelExpand');
+const panelClose = document.getElementById('panelClose');
+let panelLastFocus = null;
+function updatePanelLanguage(){
+  const vi = currentLanguage === 'vi';
+  document.getElementById('panelEyebrow').textContent = vi ? 'THÔNG TIN NGUYÊN TỐ' : 'ELEMENT PREVIEW';
+  panelExpand.textContent = document.body.classList.contains('panel-expanded')
+    ? (vi ? '← Xem nhanh' : '← Quick View')
+    : (vi ? 'Khám phá chi tiết ↗' : 'Explore in Detail ↗');
+  panelExpand.setAttribute('aria-expanded',String(document.body.classList.contains('panel-expanded')));
+  panelClose.setAttribute('aria-label',vi?'Đóng bảng thông tin':'Close information panel');
+}
+function openElementPanel(){
+  if(!document.body.classList.contains('panel-open')) panelLastFocus=document.activeElement;
+  document.body.classList.add('panel-open');
+  document.body.classList.remove('panel-expanded');
+  infoPanel.scrollTop=0;
+  updatePanelLanguage();
+  panelClose.focus({preventScroll:true});
+}
+function closeElementPanel(){
+  document.body.classList.remove('panel-open','panel-expanded');
+  updatePanelLanguage();
+  if(panelLastFocus && panelLastFocus.isConnected) panelLastFocus.focus({preventScroll:true});
+}
+panelExpand.addEventListener('click',()=>{
+  document.body.classList.toggle('panel-expanded');
+  infoPanel.scrollTop=0;
+  updatePanelLanguage();
+});
+panelClose.addEventListener('click',closeElementPanel);
+panelBackdrop.addEventListener('click',closeElementPanel);
+backButton.addEventListener('click',closeElementPanel);
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape' && document.body.classList.contains('panel-open')) closeElementPanel();
+  if(e.key==='Tab' && document.body.classList.contains('panel-open')){
+    const focusable=[...infoPanel.querySelectorAll('button:not([disabled]),a[href],input,select,[tabindex]:not([tabindex="-1"])')].filter(el=>el.getClientRects().length);
+    if(!focusable.length)return;
+    const first=focusable[0],last=focusable[focusable.length-1];
+    if(e.shiftKey && document.activeElement===first){e.preventDefault();last.focus()}
+    else if(!e.shiftKey && document.activeElement===last){e.preventDefault();first.focus()}
+  }
+});
 
 /* =========================================================
    KEYBOARD SEARCH
@@ -2817,7 +2848,7 @@ buildTable();
 const defaultElement =
     elements.find(e => e.n === 6);
 
-selectElement(defaultElement);
+selectElement(defaultElement, false);
 
 </script>
 
