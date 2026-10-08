@@ -124,7 +124,7 @@ h1 {
 
 .main-layout {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 300px;
+    grid-template-columns: minmax(0, 1fr) 400px;
     gap: 14px;
     align-items: start;
 }
@@ -421,7 +421,7 @@ h1 {
 
 .electron-diagram {
     position: relative;
-    width: min(320px, 100%);
+    width: min(360px, 100%);
     aspect-ratio: 1;
     margin: 8px auto 18px;
     display: flex;
@@ -586,7 +586,7 @@ h1 {
     }
 
     .electron-diagram {
-        width: min(290px, 100%);
+        width: min(360px, 100%);
     }
 }
 
@@ -704,6 +704,19 @@ h1 {
     background-image: linear-gradient(145deg, rgba(28,20,32,.05), rgba(28,20,32,.34)), var(--japanese-pattern);
     background-size: auto, 144px 144px;
 }
+
+/* Electron configuration desk */
+.configuration-section { margin-top: 22px; padding-top: 18px; border-top: 1px solid #cdb994; }
+.configuration-section h3 { margin: 0 0 12px; font-size: .98rem; color: #503c48; }
+.configuration-card { background: #fffaf0; border: 1px solid #dbc8a7; border-radius: 9px; padding: 12px; margin-bottom: 9px; }
+.configuration-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 9px; }
+.configuration-label { font-size: .72rem; font-weight: 700; color: #75615c; }
+.configuration-value { color: #332d3c; font-size: .9rem; line-height: 1.8; overflow-wrap: anywhere; word-spacing: .1em; }
+.configuration-value sup { font-size: .7em; line-height: 0; }
+.configuration-copy { background: #efe4d5; color: #594455; border: 1px solid #d6c2a7; border-radius: 6px; padding: 5px 9px; font-size: .72rem; }
+.configuration-copy:hover { background: #e6d5c0; }
+.configuration-note { margin: 8px 0 0; color: #796458; font-size: .73rem; line-height: 1.5; }
+
 </style>
 </head>
 
@@ -811,6 +824,20 @@ h1 {
 
     </div>
 
+
+
+    <section class="configuration-section" aria-label="Electron configurations">
+        <h3>Electron configuration</h3>
+        <div class="configuration-card">
+            <div class="configuration-top"><span class="configuration-label">Full configuration</span><button class="configuration-copy" data-copy-config="full" type="button">Copy</button></div>
+            <div class="configuration-value" id="configurationFull"></div>
+        </div>
+        <div class="configuration-card">
+            <div class="configuration-top"><span class="configuration-label">Noble-gas shorthand</span><button class="configuration-copy" data-copy-config="short" type="button">Copy</button></div>
+            <div class="configuration-value" id="configurationShort"></div>
+        </div>
+        <p class="configuration-note" id="configurationNote"></p>
+    </section>
 
     <!-- ELECTRON STRUCTURE -->
 
@@ -1784,7 +1811,6 @@ function buildTable() {
 ========================================================= */
 
 function createElectronDiagram(element) {
-    window.currentSelectedElement = element;
 
     electronDiagram.innerHTML = "";
     shellInfo.innerHTML = "";
@@ -1827,14 +1853,17 @@ function createElectronDiagram(element) {
        Shell diameters.
     */
 
-    // Fit the entire orbit AND the electron dots inside the available panel.
-    // The outermost electron is 16px wide including its border; reserve
-    // another 8px for glow and breathing room on each side.
-    const available = electronDiagram.getBoundingClientRect().width;
-    const maxDiameter = Math.max(100, available - 32);
-    const scale = Math.min(1, maxDiameter / 304);
-    const sizes = [78, 116, 154, 192, 230, 268, 304]
-        .map(diameter => diameter * scale);
+    const diagramWidth = electronDiagram.clientWidth || 320;
+    const shellScale = Math.min(1, (diagramWidth - 24) / 304);
+    const sizes = [
+        78,
+        116,
+        154,
+        192,
+        230,
+        268,
+        304
+    ];
 
 
     shells.forEach(
@@ -1856,7 +1885,7 @@ function createElectronDiagram(element) {
                         shellIndex,
                         sizes.length - 1
                     )
-                ];
+                ] * shellScale;
 
             shell.style.width =
                 `${size}px`;
@@ -1956,17 +1985,6 @@ function createElectronDiagram(element) {
 }
 
 
-// Keep shell sizing correct when the information panel changes width.
-let lastDiagramWidth = 0;
-const diagramResizeObserver = new ResizeObserver(entries => {
-    const width = entries[0].contentRect.width;
-    if (Math.abs(width - lastDiagramWidth) > 1) {
-        lastDiagramWidth = width;
-        if (window.currentSelectedElement) createElectronDiagram(window.currentSelectedElement);
-    }
-});
-diagramResizeObserver.observe(electronDiagram);
-
 /* =========================================================
    SELECT ELEMENT
 ========================================================= */
@@ -1994,6 +2012,84 @@ function japaneseMotif(category, seed) {
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="144" height="144" viewBox="0 0 144 144"><g fill="none" stroke="#fff7e6" stroke-width="2.4" stroke-opacity=".48" stroke-linejoin="round" transform="rotate(${seed ? turn / 5 : 0} 72 72)">${art}</g>${extra}</svg>`;
     return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
 }
+
+
+/* Subshell configurations: Aufbau order with documented ground-state exceptions. */
+const orbitalOrder = [
+    ['1s',2],['2s',2],['2p',6],['3s',2],['3p',6],['4s',2],['3d',10],
+    ['4p',6],['5s',2],['4d',10],['5p',6],['6s',2],['4f',14],['5d',10],
+    ['6p',6],['7s',2],['5f',14],['6d',10],['7p',6]
+];
+const configExceptions = {
+    24:{'4s':1,'3d':5}, 29:{'4s':1,'3d':10},
+    41:{'5s':1,'4d':4},42:{'5s':1,'4d':5},44:{'5s':1,'4d':7},
+    45:{'5s':1,'4d':8},46:{'5s':0,'4d':10},47:{'5s':1,'4d':10},
+    57:{'4f':0,'5d':1},58:{'4f':1,'5d':1},64:{'4f':7,'5d':1},
+    78:{'6s':1,'5d':9},79:{'6s':1,'5d':10},
+    89:{'5f':0,'6d':1},90:{'5f':0,'6d':2},91:{'5f':2,'6d':1},
+    92:{'5f':3,'6d':1},93:{'5f':4,'6d':1},96:{'5f':7,'6d':1},
+    103:{'6d':0,'7p':1},110:{'7s':1,'6d':9},111:{'7s':1,'6d':10}
+};
+const nobleCores = [[2,'He'],[10,'Ne'],[18,'Ar'],[36,'Kr'],[54,'Xe'],[86,'Rn']];
+function orbitalOccupancy(atomicNumber) {
+    let remaining = atomicNumber;
+    const occupancy = {};
+    orbitalOrder.forEach(([orbital, capacity]) => {
+        const amount = Math.min(capacity, remaining);
+        occupancy[orbital] = amount;
+        remaining -= amount;
+    });
+    Object.assign(occupancy, configExceptions[atomicNumber] || {});
+    return occupancy;
+}
+function formatConfiguration(occupancy, omitCore = 0) {
+    let toOmit = omitCore;
+    return orbitalOrder.map(([orbital, capacity]) => {
+        const count = occupancy[orbital] || 0;
+        const omitted = Math.min(count, Math.max(0, toOmit));
+        toOmit -= omitted;
+        const shown = count - omitted;
+        return shown ? `${orbital}<sup>${shown}</sup>` : '';
+    }).filter(Boolean).join(' ');
+}
+function configurationText(html) {
+    const div = document.createElement('div');
+    div.innerHTML = html.replace(/<sup>(\d+)<\/sup>/g, '^$1');
+    return div.textContent;
+}
+function updateConfiguration(element) {
+    const occupancy = orbitalOccupancy(element.n);
+    const full = formatConfiguration(occupancy);
+    const core = [...nobleCores].reverse().find(([number]) => number < element.n);
+    const abbreviated = core ? `[${core[1]}] ${formatConfiguration(occupancy, core[0])}` : full;
+    document.getElementById('configurationFull').innerHTML = full;
+    document.getElementById('configurationShort').innerHTML = abbreviated;
+    document.getElementById('configurationNote').textContent = element.n >= 104
+        ? 'Predicted electron configuration; superheavy-element structures may not be experimentally confirmed.'
+        : 'Ground-state electron configuration of a neutral atom.';
+    document.querySelectorAll('[data-copy-config]').forEach(button => {
+        button.dataset.copyText = configurationText(button.dataset.copyConfig === 'full' ? full : abbreviated);
+    });
+}
+document.querySelectorAll('[data-copy-config]').forEach(button => {
+    button.addEventListener('click', async () => {
+        const text = button.dataset.copyText || '';
+        try {
+            await navigator.clipboard.writeText(text);
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 1400);
+        } catch (error) {
+            const field = document.createElement('textarea');
+            field.value = text;
+            document.body.appendChild(field);
+            field.select();
+            document.execCommand('copy');
+            field.remove();
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 1400);
+        }
+    });
+});
 
 function selectElement(element) {
     const japanesePalettes = {
@@ -2071,6 +2167,7 @@ function selectElement(element) {
     */
 
     createElectronDiagram(element);
+    updateConfiguration(element);
 
 
     /*
