@@ -260,10 +260,25 @@ h1 {
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--muted);
-    font-size: .7rem;
-    border: 1px dashed #34404c;
-    border-radius: 8px;
+    padding: 6px 3px;
+    color: #fff9ee;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: clamp(.74rem, .95vw, .9rem);
+    font-weight: 700;
+    letter-spacing: .015em;
+    text-align: center;
+    line-height: 1.25;
+    border: 2px solid #efcb8d;
+    border-radius: 9px;
+    background: linear-gradient(140deg, #8b4e65, #4d304d);
+    box-shadow: 0 0 0 2px rgba(239,203,141,.16), 0 5px 13px rgba(0,0,0,.35);
+    text-shadow: 0 1px 3px rgba(0,0,0,.7);
+    overflow-wrap: anywhere;
+}
+.f-label.actinide-series {
+    background: linear-gradient(140deg, #6b385b, #282c59);
+    border-color: #d7b5f0;
+    box-shadow: 0 0 0 2px rgba(215,181,240,.15), 0 5px 13px rgba(0,0,0,.35);
 }
 
 /* =========================
@@ -689,81 +704,6 @@ h1 {
     background-image: linear-gradient(145deg, rgba(28,20,32,.05), rgba(28,20,32,.34)), var(--japanese-pattern);
     background-size: auto, 144px 144px;
 }
-
-/* Featured f-block: Japanese gold sakura and crimson cloud textiles */
-.periodic-table { grid-template-rows: repeat(7,72px) 86px 86px; row-gap: 8px; }
-.f-series-backdrop {
-    grid-column: 1 / -1;
-    z-index: 0;
-    border-radius: 13px;
-    pointer-events: none;
-    border: 1px solid var(--series-border);
-    background: linear-gradient(105deg,var(--series-dark),transparent 75%),
-                repeating-radial-gradient(circle at 12% 50%, transparent 0 14px, var(--series-detail) 15px 17px, transparent 18px 31px),
-                var(--series-base);
-    box-shadow: inset 0 0 0 3px rgba(255,255,255,.045), 0 5px 20px rgba(0,0,0,.23);
-}
-.f-series-backdrop.lanthanide-series {
-    --series-dark: rgba(99,37,60,.74);
-    --series-base: #6f384d;
-    --series-border: #e5b96e;
-    --series-detail: rgba(255,209,143,.13);
-}
-.f-series-backdrop.actinide-series {
-    --series-dark: rgba(30,26,72,.83);
-    --series-base: #71354e;
-    --series-border: #b5a2ee;
-    --series-detail: rgba(200,189,255,.14);
-}
-.periodic-table > .element { z-index: 1; }
-.periodic-table > .element.lanthanide {
-    border: 2px solid #e7bb76;
-    background: linear-gradient(145deg,#ac7557,#744158);
-    box-shadow: inset 0 0 0 1px rgba(255,240,201,.16);
-}
-.periodic-table > .element.actinide {
-    border: 2px solid #bba5f2;
-    background: linear-gradient(145deg,#8e4565,#443a7b);
-    box-shadow: inset 0 0 0 1px rgba(235,218,255,.13);
-}
-.periodic-table > .element.f-series-anchor {
-    outline: 2px solid var(--anchor-ring);
-    outline-offset: -5px;
-}
-.periodic-table > .element.f-series-anchor.lanthanide { --anchor-ring: #f8d59a; }
-.periodic-table > .element.f-series-anchor.actinide { --anchor-ring: #dac6ff; }
-.f-label {
-    position: relative;
-    z-index: 2;
-    flex-direction: column;
-    gap: 4px;
-    padding: 7px 2px;
-    font-family: Georgia, serif;
-    font-size: .82rem;
-    font-weight: 800;
-    letter-spacing: .01em;
-    text-align: center;
-    line-height: 1.1;
-    border: 1px solid rgba(255,235,198,.55);
-    color: #fff6e7;
-    background: rgba(25,20,36,.37);
-    text-shadow: 0 1px 4px rgba(0,0,0,.65);
-}
-.f-label small {
-    font-family: system-ui,sans-serif;
-    font-size: .57rem;
-    font-weight: 600;
-    letter-spacing: .06em;
-    color: #f3dcb8;
-}
-.f-label.actinide-label small { color: #d9c9ff; }
-.periodic-table > .element:is(.lanthanide,.actinide):hover,
-.periodic-table > .element:is(.lanthanide,.actinide):focus-visible {
-    z-index: 4;
-    filter: brightness(1.22);
-    transform: translateY(-4px);
-}
-
 </style>
 </head>
 
@@ -1708,10 +1648,6 @@ function createElementCard(element, allowUnpositioned = false) {
 
     button.className =
         `element ${element.category}`;
-    if (element.n === 57 || element.n === 89) {
-        button.classList.add('f-series-anchor');
-        button.title = element.n === 57 ? 'Lanthanide series · Lanthanum' : 'Actinide series · Actinium';
-    }
 
     const position = getPosition(element);
 
@@ -1763,14 +1699,6 @@ function buildTable() {
 
     table.innerHTML = "";
 
-    for (const [row, series] of [[8, 'lanthanide'], [9, 'actinide']]) {
-        const backdrop = document.createElement('div');
-        backdrop.className = `f-series-backdrop ${series}-series`;
-        backdrop.style.gridRow = String(row);
-        backdrop.setAttribute('aria-hidden', 'true');
-        table.appendChild(backdrop);
-    }
-
     elements.forEach(element => {
 
         const card =
@@ -1789,10 +1717,10 @@ function buildTable() {
     const lanthanideLabel =
         document.createElement("div");
 
-    lanthanideLabel.className = "f-label lanthanide-label";
+    lanthanideLabel.className = "f-label lanthanide-series";
     lanthanideLabel.style.gridRow = "8";
     lanthanideLabel.style.gridColumn = "1 / span 2";
-    lanthanideLabel.innerHTML = "Lanthanides<small>58–71 · 4f</small>";
+    lanthanideLabel.textContent = "Lanthanides";
 
     table.appendChild(lanthanideLabel);
 
@@ -1800,10 +1728,10 @@ function buildTable() {
     const actinideLabel =
         document.createElement("div");
 
-    actinideLabel.className = "f-label actinide-label";
+    actinideLabel.className = "f-label actinide-series";
     actinideLabel.style.gridRow = "9";
     actinideLabel.style.gridColumn = "1 / span 2";
-    actinideLabel.innerHTML = "Actinides<small>90–103 · 5f</small>";
+    actinideLabel.textContent = "Actinides";
 
     table.appendChild(actinideLabel);
 
