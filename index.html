@@ -427,6 +427,7 @@ h1 {
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow: visible;
 }
 
 .electron-shell {
@@ -1858,11 +1859,13 @@ function createElectronDiagram(element) {
                     )
                 ];
 
-            shell.style.width =
-                `${size}px`;
-
-            shell.style.height =
-                `${size}px`;
+            // Fit all shells proportionally inside the available diagram width.
+            // Reserve 36px for electron dots, outlines and glow at the edge.
+            // CSS percentages track the diagram when the mobile layout resizes.
+            const ratio = size / sizes[sizes.length - 1];
+            const shellDiameter = `calc(${(ratio * 100).toFixed(3)}% - ${(ratio * 36).toFixed(2)}px)`;
+            shell.style.width = shellDiameter;
+            shell.style.height = shellDiameter;
 
 
             /*
