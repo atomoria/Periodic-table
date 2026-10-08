@@ -683,6 +683,87 @@ h1 {
     .info-panel .info-heading.reveal { animation: none; }
 }
 
+
+/* Additional textile patterns are selected dynamically for each element. */
+.info-panel .info-heading {
+    background-image: linear-gradient(145deg, rgba(28,20,32,.05), rgba(28,20,32,.34)), var(--japanese-pattern);
+    background-size: auto, 144px 144px;
+}
+
+/* Featured f-block: Japanese gold sakura and crimson cloud textiles */
+.periodic-table { grid-template-rows: repeat(7,72px) 86px 86px; row-gap: 8px; }
+.f-series-backdrop {
+    grid-column: 1 / -1;
+    z-index: 0;
+    border-radius: 13px;
+    pointer-events: none;
+    border: 1px solid var(--series-border);
+    background: linear-gradient(105deg,var(--series-dark),transparent 75%),
+                repeating-radial-gradient(circle at 12% 50%, transparent 0 14px, var(--series-detail) 15px 17px, transparent 18px 31px),
+                var(--series-base);
+    box-shadow: inset 0 0 0 3px rgba(255,255,255,.045), 0 5px 20px rgba(0,0,0,.23);
+}
+.f-series-backdrop.lanthanide-series {
+    --series-dark: rgba(99,37,60,.74);
+    --series-base: #6f384d;
+    --series-border: #e5b96e;
+    --series-detail: rgba(255,209,143,.13);
+}
+.f-series-backdrop.actinide-series {
+    --series-dark: rgba(30,26,72,.83);
+    --series-base: #71354e;
+    --series-border: #b5a2ee;
+    --series-detail: rgba(200,189,255,.14);
+}
+.periodic-table > .element { z-index: 1; }
+.periodic-table > .element.lanthanide {
+    border: 2px solid #e7bb76;
+    background: linear-gradient(145deg,#ac7557,#744158);
+    box-shadow: inset 0 0 0 1px rgba(255,240,201,.16);
+}
+.periodic-table > .element.actinide {
+    border: 2px solid #bba5f2;
+    background: linear-gradient(145deg,#8e4565,#443a7b);
+    box-shadow: inset 0 0 0 1px rgba(235,218,255,.13);
+}
+.periodic-table > .element.f-series-anchor {
+    outline: 2px solid var(--anchor-ring);
+    outline-offset: -5px;
+}
+.periodic-table > .element.f-series-anchor.lanthanide { --anchor-ring: #f8d59a; }
+.periodic-table > .element.f-series-anchor.actinide { --anchor-ring: #dac6ff; }
+.f-label {
+    position: relative;
+    z-index: 2;
+    flex-direction: column;
+    gap: 4px;
+    padding: 7px 2px;
+    font-family: Georgia, serif;
+    font-size: .82rem;
+    font-weight: 800;
+    letter-spacing: .01em;
+    text-align: center;
+    line-height: 1.1;
+    border: 1px solid rgba(255,235,198,.55);
+    color: #fff6e7;
+    background: rgba(25,20,36,.37);
+    text-shadow: 0 1px 4px rgba(0,0,0,.65);
+}
+.f-label small {
+    font-family: system-ui,sans-serif;
+    font-size: .57rem;
+    font-weight: 600;
+    letter-spacing: .06em;
+    color: #f3dcb8;
+}
+.f-label.actinide-label small { color: #d9c9ff; }
+.periodic-table > .element:is(.lanthanide,.actinide):hover,
+.periodic-table > .element:is(.lanthanide,.actinide):focus-visible {
+    z-index: 4;
+    filter: brightness(1.22);
+    transform: translateY(-4px);
+}
+
 </style>
 </head>
 
@@ -1627,6 +1708,10 @@ function createElementCard(element, allowUnpositioned = false) {
 
     button.className =
         `element ${element.category}`;
+    if (element.n === 57 || element.n === 89) {
+        button.classList.add('f-series-anchor');
+        button.title = element.n === 57 ? 'Lanthanide series · Lanthanum' : 'Actinide series · Actinium';
+    }
 
     const position = getPosition(element);
 
@@ -1678,6 +1763,14 @@ function buildTable() {
 
     table.innerHTML = "";
 
+    for (const [row, series] of [[8, 'lanthanide'], [9, 'actinide']]) {
+        const backdrop = document.createElement('div');
+        backdrop.className = `f-series-backdrop ${series}-series`;
+        backdrop.style.gridRow = String(row);
+        backdrop.setAttribute('aria-hidden', 'true');
+        table.appendChild(backdrop);
+    }
+
     elements.forEach(element => {
 
         const card =
@@ -1696,10 +1789,10 @@ function buildTable() {
     const lanthanideLabel =
         document.createElement("div");
 
-    lanthanideLabel.className = "f-label";
+    lanthanideLabel.className = "f-label lanthanide-label";
     lanthanideLabel.style.gridRow = "8";
     lanthanideLabel.style.gridColumn = "1 / span 2";
-    lanthanideLabel.textContent = "Lanthanides";
+    lanthanideLabel.innerHTML = "Lanthanides<small>58–71 · 4f</small>";
 
     table.appendChild(lanthanideLabel);
 
@@ -1707,10 +1800,10 @@ function buildTable() {
     const actinideLabel =
         document.createElement("div");
 
-    actinideLabel.className = "f-label";
+    actinideLabel.className = "f-label actinide-label";
     actinideLabel.style.gridRow = "9";
     actinideLabel.style.gridColumn = "1 / span 2";
-    actinideLabel.textContent = "Actinides";
+    actinideLabel.innerHTML = "Actinides<small>90–103 · 5f</small>";
 
     table.appendChild(actinideLabel);
 
@@ -1939,6 +2032,30 @@ function createElectronDiagram(element) {
    SELECT ELEMENT
 ========================================================= */
 
+
+/* Each pattern is vector artwork generated locally; no external images required. */
+function japaneseMotif(category, seed) {
+    const n = seed || 0;
+    const turn = (n * 29) % 360;
+    const spacing = 76 + (n % 5) * 9;
+    const motifs = {
+      alkali: `<path d="M-12 55 Q18 8 49 52 T112 52 T180 52"/><path d="M-12 75 Q18 28 49 72 T112 72 T180 72"/><path d="M-12 95 Q18 48 49 92 T112 92 T180 92"/>`,
+      alkaline: `<path d="M-10 50 Q30 10 70 50 T150 50 M-10 90 Q30 50 70 90 T150 90"/><circle cx="70" cy="65" r="21"/>`,
+      transition: `<path d="M0 0L72 72L144 0M0 72L72 0L144 72M0 144L72 72L144 144M0 72L72 144L144 72"/><path d="M36 0V144M108 0V144"/>`,
+      'post-transition': `<path d="M24 144V0M64 144V0M104 144V0M0 28H144M0 84H144"/><path d="M24 28Q64 2 104 28M24 84Q64 58 104 84"/>`,
+      metalloid: `<path d="M72 8L136 72L72 136L8 72Z M72 30L114 72L72 114L30 72Z"/><path d="M72 8V136M8 72H136"/>`,
+      nonmetal: `<path d="M-24 40a48 48 0 0 1 96 0M0 40a24 24 0 0 1 48 0M48 40a48 48 0 0 1 96 0M72 40a24 24 0 0 1 48 0M-24 112a48 48 0 0 1 96 0M0 112a24 24 0 0 1 48 0M48 112a48 48 0 0 1 96 0M72 112a24 24 0 0 1 48 0"/>`,
+      halogen: `<path d="M72 18Q91 43 72 72Q53 43 72 18M72 72Q98 49 127 72Q98 95 72 72M72 72Q91 99 72 127Q53 99 72 72M72 72Q46 49 17 72Q46 95 72 72"/><circle cx="72" cy="72" r="9"/>`,
+      noble: `<circle cx="72" cy="72" r="49"/><circle cx="72" cy="72" r="30"/><circle cx="72" cy="72" r="11"/><path d="M72 0V144M0 72H144"/>`,
+      lanthanide: `<path d="M0 144Q24 12 48 144Q72 12 96 144Q120 12 144 144"/><path d="M0 118Q24 -14 48 118Q72 -14 96 118Q120 -14 144 118"/>`,
+      actinide: `<path d="M0 0Q72 72 144 0M0 36Q72 108 144 36M0 72Q72 144 144 72M0 108Q72 180 144 108"/><path d="M36 0V144M108 0V144"/>`
+    };
+    const art = motifs[category] || motifs.nonmetal;
+    const extra = seed ? `<g transform="translate(${20 + (n * 13) % 98} ${20 + (n * 19) % 98}) rotate(${turn})" fill="white" fill-opacity=".25" stroke="none"><path d="M0 -12L4 -4L12 0L4 4L0 12L-4 4L-12 0L-4 -4Z"/></g><circle cx="${(n * 23) % 144}" cy="${(n * 37) % 144}" r="${3+n%6}" fill="white" fill-opacity=".2" stroke="none"/>` : '';
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="144" height="144" viewBox="0 0 144 144"><g fill="none" stroke="#fff7e6" stroke-width="2.4" stroke-opacity=".48" stroke-linejoin="round" transform="rotate(${seed ? turn / 5 : 0} 72 72)">${art}</g>${extra}</svg>`;
+    return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+}
+
 function selectElement(element) {
     const japanesePalettes = {
         alkali: ["#b54b4b", "#802e3a"],
@@ -1953,8 +2070,15 @@ function selectElement(element) {
         actinide: ["#aa6751", "#774235"]
     };
     const palette = japanesePalettes[element.category] || japanesePalettes.nonmetal;
-    infoPanel.style.setProperty("--japan-base", palette[0]);
-    infoPanel.style.setProperty("--japan-ink", palette[1]);
+    // A different motif variation and nuanced color for each atomic number.
+    infoPanel.style.setProperty('--japanese-pattern', japaneseMotif(element.category, element.n));
+    const variation = (element.n * 7) % 19 - 9;
+    const shiftColor = (hex, amount) => {
+        const parts = [1, 3, 5].map(i => parseInt(hex.slice(i, i+2), 16));
+        return '#' + parts.map(v => Math.max(0, Math.min(255, v + amount)).toString(16).padStart(2, '0')).join('');
+    };
+    infoPanel.style.setProperty("--japan-base", shiftColor(palette[0], variation));
+    infoPanel.style.setProperty("--japan-ink", shiftColor(palette[1], variation));
     const japaneseHeader = infoPanel.querySelector(".info-heading");
     japaneseHeader.classList.remove("reveal");
     void japaneseHeader.offsetWidth;
