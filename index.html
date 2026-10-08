@@ -768,6 +768,33 @@ h1 {
     .element:hover, .element:focus-visible, .legend button:hover { transform: none; }
 }
 
+
+/* High-contrast f-block series markers — restore clear visual hierarchy. */
+.periodic-table .f-label {
+    position: relative;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: clamp(.9rem, 1.1vw, 1.04rem);
+    font-weight: 900;
+    letter-spacing: .01em;
+    line-height: 1.15;
+    color: #30212d;
+    background: linear-gradient(145deg, #fff4d8 0%, #e9c889 100%);
+    border: 3px solid #ffe3a5;
+    border-left: 6px solid #bd7a36;
+    border-radius: 10px;
+    box-shadow: 0 0 0 2px rgba(255,219,152,.22), 0 5px 16px rgba(0,0,0,.4);
+    text-shadow: 0 1px 0 rgba(255,255,255,.55);
+    padding: 6px 4px;
+    overflow-wrap: normal;
+}
+.periodic-table .f-label.actinide-series {
+    color: #301d3c;
+    background: linear-gradient(145deg, #f8e8ff 0%, #d7b4e8 100%);
+    border-color: #efd5ff;
+    border-left-color: #9452a9;
+    box-shadow: 0 0 0 2px rgba(228,185,250,.23), 0 5px 16px rgba(0,0,0,.4);
+}
+
 </style>
 </head>
 
