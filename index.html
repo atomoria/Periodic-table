@@ -1008,12 +1008,14 @@ html[lang="vi"] .info-panel .description {
 .encyclopedia a{color:#b7dfff;text-decoration:underline;text-underline-offset:3px}
 .encyclopedia .review-status{font-size:.84rem;color:#c9c0ad}
 
+/* Keep the global language switch behind the modal drawer, not over its controls. */
+body.panel-open .language-switch{visibility:hidden!important;pointer-events:none!important}
 /* Moonlit hybrid: full-width periodic table + slide-out quick view + expanded reader */
 .main-layout{display:block!important;position:relative}
 .table-panel{width:100%;max-width:none}
-.panel-backdrop{position:fixed;inset:0;background:rgba(2,8,18,.54);backdrop-filter:blur(2px);z-index:1998;opacity:0;visibility:hidden;transition:opacity .25s,visibility .25s}
+.panel-backdrop{position:fixed;inset:0;background:rgba(2,8,18,.54);backdrop-filter:blur(2px);z-index:11998;opacity:0;visibility:hidden;transition:opacity .25s,visibility .25s}
 body.panel-open .panel-backdrop{opacity:1;visibility:visible}
-#infoPanel.info-panel{position:fixed!important;right:0!important;left:auto!important;top:0!important;bottom:0!important;z-index:1999;width:min(460px,100vw)!important;max-width:none!important;height:100dvh!important;overflow-y:auto;overscroll-behavior:contain;transform:translateX(105%);transition:transform .32s ease,width .32s ease;box-sizing:border-box;margin:0!important;border-radius:18px 0 0 18px!important;scrollbar-width:thin;scrollbar-color:#a78453 #101b2a;order:unset!important}
+#infoPanel.info-panel{position:fixed!important;right:0!important;left:auto!important;top:0!important;bottom:0!important;z-index:11999;width:min(460px,100vw)!important;max-width:none!important;height:100dvh!important;overflow-y:auto;overscroll-behavior:contain;transform:translateX(105%);transition:transform .32s ease,width .32s ease;box-sizing:border-box;margin:0!important;border-radius:18px 0 0 18px!important;scrollbar-width:thin;scrollbar-color:#a78453 #101b2a;order:unset!important}
 body.panel-open #infoPanel{transform:translateX(0)}
 body.panel-expanded #infoPanel{width:min(850px,100vw)!important}
 body.panel-expanded #infoPanel .info-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
@@ -2499,6 +2501,40 @@ const VERIFIED_ENCYCLOPEDIA = {
     sources:[['Royal Society of Chemistry','https://periodic-table.rsc.org/element/26/iron']]
   }
 };
+
+/* Reference-level profiles for all elements. These are NOT marked as fully verified
+   encyclopedia entries; detailed properties and uses require individual source review. */
+const ELEMENT_STATES_GAS = new Set([1,2,7,8,9,10,17,18,36,54,86]);
+const ELEMENT_STATES_LIQUID = new Set([35,80]);
+const ELEMENT_STATES_UNCERTAIN = new Set([104,105,106,107,108,109,110,111,112,113,114,115,116,117,118]);
+const CATEGORY_CONTEXT = {
+  alkali:['Alkali metals generally react readily and tend to form +1 ions.','Kim loại kiềm nhìn chung dễ phản ứng và thường tạo ion mang điện tích +1.'],
+  alkaline:['Alkaline earth metals commonly form +2 ions.','Kim loại kiềm thổ thường tạo ion mang điện tích +2.'],
+  transition:['Transition metals often exhibit variable oxidation states; behavior depends on the element.','Nhiều kim loại chuyển tiếp có nhiều số oxi hóa; tính chất cụ thể tùy nguyên tố.'],
+  'post-transition':['This metal belongs to the post-transition region; its chemistry must be considered individually.','Kim loại này thuộc vùng sau chuyển tiếp; cần xem xét riêng tính chất hóa học của từng nguyên tố.'],
+  metalloid:['Metalloids have properties intermediate between typical metals and nonmetals.','Á kim có những tính chất trung gian giữa kim loại và phi kim điển hình.'],
+  nonmetal:['Nonmetals display varied bonding and reactivity depending on the element.','Phi kim có kiểu liên kết và mức độ phản ứng đa dạng tùy nguyên tố.'],
+  halogen:['Halogens are group 17 elements and often form compounds with metals.','Halogen thuộc nhóm 17 và thường tạo hợp chất với kim loại.'],
+  noble:['Noble gases are generally relatively unreactive, although some can form compounds.','Khí hiếm nhìn chung ít phản ứng, dù một số nguyên tố vẫn có thể tạo hợp chất.'],
+  lanthanide:['Lanthanides are metallic elements with closely related chemistry, often featuring the +3 oxidation state.','Các nguyên tố họ Lanthanide là kim loại có tính chất hóa học gần nhau, thường gặp số oxi hóa +3.'],
+  actinide:['Actinides are radioactive elements; their chemical behavior varies considerably.','Các nguyên tố họ Actinide có tính phóng xạ; tính chất hóa học của chúng khá đa dạng.']
+};
+function referenceProfile(element) {
+  const vi=currentLanguage==='vi';
+  const context=CATEGORY_CONTEXT[element.category] || ['Properties depend on the element.','Tính chất phụ thuộc từng nguyên tố.'];
+  const state=ELEMENT_STATES_UNCERTAIN.has(element.n)
+    ? [ 'Not reliably established', 'Chưa được xác định đáng tin cậy' ]
+    : ELEMENT_STATES_GAS.has(element.n) ? ['Gas','Khí']
+    : ELEMENT_STATES_LIQUID.has(element.n) ? ['Liquid','Lỏng'] : ['Solid','Rắn'];
+  return {
+    overview: vi
+      ? `${element.name} (số hiệu nguyên tử ${element.n}) thuộc nhóm ${element.category.replaceAll("-"," ")}. ${context[1]}`
+      : `${element.name} (atomic number ${element.n}) belongs to the ${element.category.replaceAll("-"," ")} category. ${context[0]}`,
+    state:state[vi?1:0], chemical:context[vi?1:0],
+    source:`https://periodic-table.rsc.org/element/${element.n}`
+  };
+}
+
 function renderEncyclopedia(element) {
   const host=document.getElementById('elementEncyclopedia');
   if (!host) return;
@@ -2509,7 +2545,17 @@ function renderEncyclopedia(element) {
   intro.textContent=entry?entry.overview[vi?'vi':'en']:(vi?'Nội dung chuyên sâu của nguyên tố này đang chờ kiểm chứng. Không hiển thị dữ liệu chưa xác minh.':'This element’s extended profile is awaiting verification. Unverified facts are not displayed.');
   host.append(intro);
   if (!entry) {
-    const status=document.createElement('p');status.className='review-status';status.textContent=vi?'Đang chờ đối chiếu nguồn khoa học.':'Awaiting scientific source review.';host.append(status);
+    const ref=referenceProfile(element);
+    intro.textContent=ref.overview;
+    const make=(title,value)=>{const d=document.createElement('details');const s=document.createElement('summary');s.textContent=title;const b=document.createElement('div');b.className='encyclopedia-body';b.textContent=value;d.append(s,b);host.append(d);};
+    make(vi?'Tính chất vật lí':'Physical properties',(vi?'Trạng thái ở khoảng 20°C: ':'State near 20°C: ')+ref.state);
+    make(vi?'Tính chất hóa học':'Chemical properties',ref.chemical);
+    make(vi?'Ứng dụng thực tế':'Real-world applications',vi?'Ứng dụng cụ thể cần được đối chiếu theo nguồn khoa học cho nguyên tố này. Xem liên kết tham khảo bên dưới.':'Element-specific applications are pending individual source review. See the reference below.');
+    const d=document.createElement('details');const summary=document.createElement('summary');summary.textContent=vi?'Nguồn tham khảo':'Sources';
+    const body=document.createElement('div');body.className='encyclopedia-body';
+    const a=document.createElement('a');a.href=ref.source;a.target='_blank';a.rel='noopener noreferrer';a.textContent='Royal Society of Chemistry — '+element.name;
+    body.append(a);d.append(summary,body);host.append(d);
+    const status=document.createElement('p');status.className='review-status';status.textContent=vi?'Hồ sơ cơ bản · Các số liệu chi tiết và ứng dụng đang chờ xác minh riêng.':'Basic reference profile · Detailed measurements and applications pending individual verification.';host.append(status);
     return;
   }
   const addSection=(title,fill,open=false)=>{
