@@ -1042,7 +1042,8 @@ body.panel-open{overflow:hidden}
 
 
 /* Moonlit study quiz — isolated from the element drawer */
-.quiz-launch{margin:12px 0 0;display:flex;justify-content:flex-end}
+.quiz-launch{position:relative;z-index:5;display:flex;justify-content:flex-end;margin:0 3px 10px}.quiz-launch button{font-size:12px;min-height:30px;padding:6px 12px;box-shadow:0 2px 12px #0006}.quiz-launch button:hover{filter:brightness(1.12)}
+@media(max-width:650px){.quiz-launch{justify-content:flex-end;margin:0 2px 9px}.table-panel::before{padding-right:0}}
 .quiz-launch button,.quiz-action{border:1px solid #d8b779;border-radius:10px;background:linear-gradient(145deg,#d9b87e,#9c7643);color:#101d2d;font-weight:800;padding:11px 18px;cursor:pointer}
 .quiz-overlay{position:fixed;inset:0;z-index:20000;background:rgba(4,11,24,.85);display:none;align-items:center;justify-content:center;padding:18px;backdrop-filter:blur(8px)}
 .quiz-overlay.open{display:flex}
@@ -1064,6 +1065,23 @@ body.panel-open{overflow:hidden}
 .quiz-muted{color:#c2cde0;font-size:.92rem}
 @media(max-width:480px){.quiz-dialog{padding:17px}.quiz-options{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){.quiz-progress>div{transition:none}}
+
+/* Compact, bilingual explanations linked to the existing category filters. */
+.category-explanation{margin-top:12px;padding:13px 17px;border:1px solid rgba(214,182,129,.48);border-left:3px solid #d6b681;border-radius:9px;background:linear-gradient(115deg,rgba(23,38,57,.94),rgba(9,19,34,.95));color:#e9e2d3;box-shadow:0 5px 16px #0002}
+.category-explanation-heading{font-family:Arial,"Noto Sans",sans-serif;color:#f3d59e;font-size:13px;font-weight:700;line-height:1.55}
+.category-explanation p{font-family:Arial,"Noto Sans",sans-serif;font-size:13px;line-height:1.7;margin:5px 0 0;letter-spacing:0;overflow-wrap:break-word}
+@media(max-width:600px){.category-explanation{padding:11px 13px}.category-explanation p{font-size:12px}}
+
+
+/* Scientific context for the illustrative atom, readable in both languages. */
+#infoPanel .atom-education{margin:13px 0 4px;padding:12px 14px;border:1px solid rgba(211,170,104,.6);border-left:3px solid #e5bb7b;border-radius:10px;background:#122237;color:#f1e7d6;font:13px/1.6 Arial,"Noto Sans",sans-serif}
+#infoPanel .atom-education-title{font-weight:700;color:#f0d39e;margin-bottom:5px}
+#infoPanel .atom-education p{margin:0 0 8px;overflow-wrap:break-word}
+#infoPanel .atom-shell-summary{color:#c9e5fa;font-weight:600}
+#infoPanel .atom-controls{display:flex;justify-content:center;gap:8px;margin-top:8px}
+#infoPanel .atom-pause{border:1px solid #b9915e;background:#20354c;color:#f8dfb3;border-radius:8px;padding:7px 13px;cursor:pointer;font:600 12px Arial,"Noto Sans",sans-serif}
+#infoPanel .atom-pause:focus-visible{outline:2px solid #f0d39e;outline-offset:2px}
+
 </style>
 </head>
 
@@ -1100,6 +1118,7 @@ body.panel-open{overflow:hidden}
 
 <main class="main-layout">
 
+<div class="quiz-launch"><button id="openChemQuiz" type="button">✦ Chemistry Quiz / Trắc nghiệm</button></div>
 <section class="table-panel" id="periodicTableSection">
 
     <div class="table-scroll">
@@ -1119,11 +1138,15 @@ body.panel-open{overflow:hidden}
         <button data-category="lanthanide">Lanthanides</button>
         <button data-category="actinide">Actinides</button>
     </div>
+    <div id="categoryExplanation" class="category-explanation" role="status" aria-live="polite">
+      <div class="category-explanation-heading" id="categoryExplanationHeading"></div>
+      <p id="categoryExplanationText"></p>
+    </div>
 
 </section>
 
 
-<div class="quiz-launch"><button id="openChemQuiz" type="button">✦ Chemistry Quiz / Trắc nghiệm</button></div>
+
 <div id="chemQuizOverlay" class="quiz-overlay" role="presentation">
   <section class="quiz-dialog" role="dialog" aria-modal="true" aria-labelledby="quizHeading" tabindex="-1">
     <div class="quiz-head"><h2 id="quizHeading">Chemistry Quiz</h2><button class="quiz-close" id="closeChemQuiz" type="button" aria-label="Close">×</button></div>
@@ -1213,7 +1236,7 @@ body.panel-open{overflow:hidden}
     <div class="electron-section">
 
         <div class="section-title">
-            <strong>Electron structure</strong>
+            <strong>3D Electron Shell Illustration</strong>
 
             <span
                 class="valence-badge"
@@ -1232,6 +1255,11 @@ body.panel-open{overflow:hidden}
             class="shell-info"
             id="shellInfo"
         ></div>
+        <div class="atom-education" id="atomEducation" aria-live="polite">
+            <div class="atom-education-title" id="atomEducationTitle">Illustrative model · Not to scale</div>
+            <p id="atomEducationText">This Bohr-style illustration shows how electrons are distributed among shells. The animated paths are visual aids only: electrons are described by quantum-mechanical orbitals, not fixed trajectories.</p>
+            <div class="atom-shell-summary" id="atomShellSummary"></div>
+        </div>
 
     </div>
 
@@ -1930,6 +1958,7 @@ function setLanguage(language) {
     currentLanguage = language;
     try { localStorage.setItem('periodic-table-language', language); } catch (e) {}
     translateStaticUI();
+    updateCategoryExplanation();
     updatePanelLanguage();
     buildTable();
     if (selectedElement) selectElement(selectedElement, false);
@@ -2260,6 +2289,13 @@ function createElectronDiagram(element) {
     electronDiagram.replaceChildren();
     shellInfo.replaceChildren();
     const shells = element.shells;
+    const vi = currentLanguage === 'vi';
+    document.querySelector('.electron-section .section-title strong').textContent = vi ? 'Minh họa 3D các lớp electron' : '3D Electron Shell Illustration';
+    document.getElementById('atomEducationTitle').textContent = vi ? 'Mô hình minh họa · Không theo tỉ lệ thực' : 'Illustrative model · Not to scale';
+    document.getElementById('atomEducationText').textContent = vi
+        ? 'Mô hình kiểu Bohr này minh họa sự phân bố electron theo các lớp. Các đường chuyển động chỉ giúp trực quan hóa; electron thực tế được mô tả bằng orbital theo cơ học lượng tử, không phải quỹ đạo cố định.'
+        : 'This Bohr-style illustration shows how electrons are distributed among shells. The animated paths are visual aids only: electrons are described by quantum-mechanical orbitals, not fixed trajectories.';
+    document.getElementById('atomShellSummary').textContent = (vi ? 'Phân bố electron theo lớp: ' : 'Electrons per shell: ') + shells.join(' · ');
     const outermost = shells.length - 1;
     valenceCount.textContent = `${shells[outermost]} ${currentLanguage === "vi" ? "e⁻ hóa trị" : "valence e⁻"}`;
     shells.forEach((count, index) => {
@@ -2279,6 +2315,20 @@ function createElectronDiagram(element) {
     hint.className = 'atom-3d-hint';
     hint.textContent = currentLanguage === 'vi' ? 'Kéo để xoay · Cuộn để thu phóng · Nhấp đúp để đặt lại' : 'Drag to rotate · Scroll to zoom · Double-click to reset';
     electronDiagram.appendChild(hint);
+    const controls = document.createElement('div');
+    controls.className = 'atom-controls';
+    const pauseButton = document.createElement('button');
+    pauseButton.type = 'button';
+    pauseButton.className = 'atom-pause';
+    let paused = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const updatePauseLabel = () => {
+        pauseButton.textContent = paused ? (currentLanguage === 'vi' ? '▶ Phát' : '▶ Play') : (currentLanguage === 'vi' ? 'Ⅱ Tạm dừng' : 'Ⅱ Pause');
+        pauseButton.setAttribute('aria-pressed', String(paused));
+    };
+    updatePauseLabel();
+    pauseButton.addEventListener('click', () => { paused = !paused; updatePauseLabel(); });
+    controls.appendChild(pauseButton);
+    electronDiagram.appendChild(controls);
     const ctx = canvas.getContext('2d');
     if (!ctx) { hint.textContent = '3D canvas unavailable'; return; }
     const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -2357,7 +2407,7 @@ function createElectronDiagram(element) {
     }
     function frame(now) {
         if(disposed) return;
-        if(!motion.matches && !document.hidden) {
+        if(!paused && !document.hidden) {
             phase+=Math.min((now-(lastTime||now))/1000,.05);
             draw();
         }
@@ -2772,6 +2822,62 @@ clearSearch.addEventListener(
 );
 
 
+
+/* Category descriptions: explanations, not redundant element lists. */
+const CATEGORY_EXPLANATIONS = {
+  all: {
+    en:['Why are elements classified?','The periodic table arranges elements by atomic number. Elements in the same column often have similar valence-electron structures and chemical behavior; the colored categories also group elements by broader shared properties.'],
+    vi:['Vì sao các nguyên tố được phân loại?','Bảng tuần hoàn sắp xếp các nguyên tố theo số hiệu nguyên tử. Các nguyên tố cùng cột thường có cấu trúc electron hóa trị và tính chất hóa học tương tự; các nhóm màu còn phân loại theo những đặc điểm chung rộng hơn.']
+  },
+  alkali: {
+    en:['Alkali metals','These Group 1 metals (excluding hydrogen) have one valence electron. They readily lose it to form +1 ions and are generally highly reactive.'],
+    vi:['Kim loại kiềm','Các kim loại nhóm IA (không bao gồm Hydrogen) có một electron hóa trị. Chúng dễ nhường electron này để tạo ion +1 và thường phản ứng rất mạnh.']
+  },
+  alkaline: {
+    en:['Alkaline earth metals','These Group 2 metals have two valence electrons and commonly form +2 ions. They share characteristic metallic and reactive behavior, although reactivity varies across the group.'],
+    vi:['Kim loại kiềm thổ','Các kim loại nhóm IIA có hai electron hóa trị và thường tạo ion +2. Chúng có những tính chất kim loại và khả năng phản ứng tương đồng, nhưng mức độ phản ứng khác nhau giữa các nguyên tố.']
+  },
+  transition: {
+    en:['Transition metals','These metals occupy the central d-block region. Many form ions with incomplete d subshells, show multiple oxidation states, and form coordination compounds; individual properties vary.'],
+    vi:['Kim loại chuyển tiếp','Các kim loại này nằm ở vùng khối d giữa bảng tuần hoàn. Nhiều nguyên tố tạo ion có phân lớp d chưa bão hòa, có nhiều số oxi hóa và tạo hợp chất phối trí; tính chất cụ thể có thể khác nhau.']
+  },
+  'post-transition': {
+    en:['Post-transition metals','This conventional category covers several metals beyond the d-block. They generally show metallic bonding but often have lower melting points or different bonding behavior than many transition metals; the exact membership varies by source.'],
+    vi:['Kim loại sau chuyển tiếp','Đây là nhóm phân loại quy ước gồm một số kim loại nằm sau khối d. Chúng có liên kết kim loại nhưng thường có nhiệt độ nóng chảy thấp hơn hoặc kiểu liên kết khác nhiều kim loại chuyển tiếp; cách xếp loại có thể khác nhau giữa các nguồn.']
+  },
+  metalloid: {
+    en:['Metalloids','Metalloids have a mixture of metallic and nonmetallic characteristics. Several are semiconductors, and the boundary between metalloids and other categories is not universally agreed upon.'],
+    vi:['Á kim','Á kim thể hiện cả đặc điểm của kim loại và phi kim. Một số là chất bán dẫn; ranh giới phân loại giữa á kim và các nhóm khác chưa hoàn toàn thống nhất.']
+  },
+  nonmetal: {
+    en:['Nonmetals','These elements generally lack typical metallic properties and often form covalent bonds. Their physical states and reactivities vary greatly, so the category describes broad similarities rather than identical behavior.'],
+    vi:['Phi kim','Các nguyên tố này nhìn chung không có những tính chất đặc trưng của kim loại và thường tạo liên kết cộng hóa trị. Trạng thái vật chất và khả năng phản ứng rất đa dạng, vì vậy đây là nhóm có các đặc điểm chung chứ không hoàn toàn giống nhau.']
+  },
+  halogen: {
+    en:['Halogens','Group 17 elements have seven valence electrons in their neutral atoms. They often gain or share one electron in compounds and commonly form salts with metals; reactivity varies down the group.'],
+    vi:['Halogen','Các nguyên tố nhóm VIIA có bảy electron hóa trị trong nguyên tử trung hòa. Chúng thường nhận hoặc dùng chung một electron khi tạo hợp chất và dễ tạo muối với kim loại; mức độ phản ứng thay đổi trong nhóm.']
+  },
+  noble: {
+    en:['Noble gases','Group 18 elements have filled outer electron shells (helium has two electrons). This makes most of them relatively unreactive, although some heavier noble gases can form compounds.'],
+    vi:['Khí hiếm','Các nguyên tố nhóm VIIIA có lớp electron ngoài cùng đã bão hòa (Helium có hai electron). Vì vậy, phần lớn khá kém hoạt động hóa học, dù một số khí hiếm nặng vẫn có thể tạo hợp chất.']
+  },
+  lanthanide: {
+    en:['Lanthanides','This series is associated with filling the 4f subshell. Many members show similar chemistry, commonly form +3 ions, and are often discussed together as rare-earth elements.'],
+    vi:['Họ Lantan','Dãy nguyên tố này gắn với sự điền electron vào phân lớp 4f. Nhiều nguyên tố có tính chất hóa học tương tự, thường tạo ion +3 và hay được nghiên cứu cùng nhóm đất hiếm.']
+  },
+  actinide: {
+    en:['Actinides','This series is associated with the 5f subshell. All actinides are radioactive, and several can exhibit multiple oxidation states; many heavier members are synthetic and poorly characterized.'],
+    vi:['Họ Actini','Dãy nguyên tố này gắn với phân lớp 5f. Tất cả đều có tính phóng xạ; một số có nhiều số oxi hóa. Nhiều nguyên tố nặng trong dãy được tổng hợp nhân tạo và chưa được nghiên cứu đầy đủ.']
+  }
+};
+function updateCategoryExplanation(){
+  const key=document.querySelector('.legend button.active')?.dataset.category || 'all';
+  const entry=CATEGORY_EXPLANATIONS[key] || CATEGORY_EXPLANATIONS.all;
+  const [heading,description]=entry[currentLanguage==='vi'?'vi':'en'];
+  document.getElementById('categoryExplanationHeading').textContent=heading;
+  document.getElementById('categoryExplanationText').textContent=description;
+}
+
 /* =========================================================
    CATEGORY FILTER
 ========================================================= */
@@ -2791,6 +2897,7 @@ document
                     );
 
                 button.classList.add("active");
+                updateCategoryExplanation();
 
 
                 const category =
@@ -3001,6 +3108,7 @@ document.getElementById('langEN').addEventListener('click', () => setLanguage('e
 document.getElementById('langVI').addEventListener('click', () => setLanguage('vi'));
 try { currentLanguage = localStorage.getItem('periodic-table-language') === 'vi' ? 'vi' : 'en'; } catch (e) {}
 translateStaticUI();
+updateCategoryExplanation();
 buildTable();
 
 
