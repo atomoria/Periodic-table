@@ -1,0 +1,3151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interactive Periodic Table</title>
+
+<style>
+:root {
+    --bg: #080c11;
+    --panel: #0f151d;
+    --panel-2: #141c25;
+    --border: #26313d;
+    --text: #e8eef5;
+    --muted: #8d9aaa;
+    --accent: #60a5fa;
+    --accent-soft: rgba(96,165,250,.14);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    margin: 0;
+    background:
+        radial-gradient(circle at top, #111b27 0%, #080c11 45%);
+    color: var(--text);
+    font-family:
+        Inter,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+}
+
+button,
+input {
+    font: inherit;
+}
+
+button {
+    cursor: pointer;
+}
+
+.container {
+    width: min(1500px, calc(100% - 32px));
+    margin: auto;
+}
+
+/* =========================
+   HEADER
+========================= */
+
+header {
+    padding: 36px 0 24px;
+}
+
+.header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 20px;
+}
+
+h1 {
+    margin: 0;
+    font-size: clamp(1.8rem, 4vw, 3rem);
+    letter-spacing: -0.04em;
+}
+
+.subtitle {
+    margin: 8px 0 0;
+    color: var(--muted);
+}
+
+/* =========================
+   SEARCH
+========================= */
+
+.search-area {
+    display: flex;
+    gap: 10px;
+    margin: 24px 0;
+}
+
+.search-area input {
+    flex: 1;
+    min-width: 0;
+    padding: 14px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: #0c1219;
+    color: var(--text);
+    outline: none;
+    font-size: 16px;
+}
+
+.search-area input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(96,165,250,.12);
+}
+
+.clear-btn {
+    border: 1px solid var(--border);
+    background: var(--panel-2);
+    color: var(--text);
+    padding: 0 18px;
+    border-radius: 10px;
+}
+
+.clear-btn:hover {
+    background: #1b2632;
+}
+
+/* =========================
+   MAIN LAYOUT
+========================= */
+
+.main-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 400px;
+    gap: 14px;
+    align-items: start;
+}
+
+/* =========================
+   PERIODIC TABLE
+========================= */
+
+.table-panel {
+    min-width: 0;
+}
+
+.table-scroll {
+    overflow-x: auto;
+    padding-bottom: 12px;
+}
+
+.periodic-table {
+    display: grid;
+    grid-template-columns: repeat(18, minmax(47px, 1fr));
+    grid-template-rows: repeat(9, 72px);
+    gap: 5px;
+    min-width: 930px;
+}
+
+.element {
+    position: relative;
+    border: 1px solid rgba(255,255,255,.14);
+    border-radius: 9px;
+    padding: 5px;
+    color: white;
+    min-width: 0;
+    transition:
+        transform .15s ease,
+        filter .15s ease,
+        opacity .15s ease,
+        border-color .15s ease;
+    text-align: left;
+    overflow: hidden;
+}
+
+.element:hover,
+.element:focus-visible {
+    transform: translateY(-3px);
+    border-color: rgba(255,255,255,.75);
+    z-index: 10;
+    outline: none;
+}
+
+.element.dimmed {
+    opacity: .15;
+    filter: grayscale(.8);
+}
+
+.element-number {
+    position: absolute;
+    top: 5px;
+    left: 6px;
+    font-size: .65rem;
+    opacity: .75;
+}
+
+.element-symbol {
+    margin-top: 10px;
+    font-size: 1.4rem;
+    line-height: 1;
+    font-weight: 800;
+}
+
+.element-name {
+    margin-top: 4px;
+    font-size: .62rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.element-mass {
+    margin-top: 3px;
+    font-size: .55rem;
+    opacity: .7;
+}
+
+/* =========================
+   CATEGORY COLORS
+========================= */
+
+.alkali {
+    background: linear-gradient(145deg, #74343a, #4b2026);
+}
+
+.alkaline {
+    background: linear-gradient(145deg, #72512b, #4a331c);
+}
+
+.transition {
+    background: linear-gradient(145deg, #315c72, #203d4d);
+}
+
+.post-transition {
+    background: linear-gradient(145deg, #4b5871, #30394d);
+}
+
+.metalloid {
+    background: linear-gradient(145deg, #315f58, #21423e);
+}
+
+.nonmetal {
+    background: linear-gradient(145deg, #285d46, #1b3f31);
+}
+
+.halogen {
+    background: linear-gradient(145deg, #5d3970, #3c264b);
+}
+
+.noble {
+    background: linear-gradient(145deg, #4c4c78, #303052);
+}
+
+.lanthanide {
+    background: linear-gradient(145deg, #69503b, #463526);
+}
+
+.actinide {
+    background: linear-gradient(145deg, #663b52, #432636);
+}
+
+/* =========================
+   F-BLOCK LABEL
+========================= */
+
+.f-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 3px;
+    color: #fff9ee;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: clamp(.74rem, .95vw, .9rem);
+    font-weight: 700;
+    letter-spacing: .015em;
+    text-align: center;
+    line-height: 1.25;
+    border: 2px solid #efcb8d;
+    border-radius: 9px;
+    background: linear-gradient(140deg, #8b4e65, #4d304d);
+    box-shadow: 0 0 0 2px rgba(239,203,141,.16), 0 5px 13px rgba(0,0,0,.35);
+    text-shadow: 0 1px 3px rgba(0,0,0,.7);
+    overflow-wrap: anywhere;
+}
+.f-label.actinide-series {
+    background: linear-gradient(140deg, #6b385b, #282c59);
+    border-color: #d7b5f0;
+    box-shadow: 0 0 0 2px rgba(215,181,240,.15), 0 5px 13px rgba(0,0,0,.35);
+}
+
+/* =========================
+   LEGEND
+========================= */
+
+.legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-top: 16px;
+}
+
+.legend button {
+    border: 1px solid var(--border);
+    background: #111820;
+    color: #b8c3cf;
+    padding: 7px 10px;
+    border-radius: 7px;
+    font-size: .72rem;
+}
+
+.legend button:hover,
+.legend button.active {
+    border-color: var(--accent);
+    color: white;
+    background: var(--accent-soft);
+}
+
+/* =========================
+   INFORMATION PANEL
+========================= */
+
+.info-panel {
+    background: rgba(15,21,29,.95);
+    border: 1px solid var(--border);
+    border-radius: 15px;
+    padding: 16px;
+    position: sticky;
+    top: 18px;
+    scroll-margin-top: 20px;
+}
+
+.info-label {
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    font-size: .68rem;
+    font-weight: 800;
+}
+
+.info-heading {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin: 10px 0 20px;
+}
+
+.big-symbol {
+    width: 70px;
+    height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    background: var(--accent-soft);
+    border: 1px solid rgba(96,165,250,.4);
+    color: #bfdbfe;
+    font-size: 2rem;
+    font-weight: 900;
+}
+
+.info-heading h2 {
+    margin: 0;
+    font-size: 1.6rem;
+}
+
+.info-heading p {
+    margin: 5px 0 0;
+    color: var(--muted);
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.info-card {
+    background: #111820;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    padding: 10px;
+}
+
+.info-card-label {
+    font-size: .65rem;
+    color: var(--muted);
+}
+
+.info-card-value {
+    margin-top: 4px;
+    font-weight: 700;
+}
+
+/* =========================
+   ELECTRON STRUCTURE
+========================= */
+
+.electron-section {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+}
+
+.section-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.section-title strong {
+    font-size: .95rem;
+}
+
+.valence-badge {
+    padding: 6px 9px;
+    border-radius: 8px;
+    background: rgba(96,165,250,.13);
+    border: 1px solid rgba(96,165,250,.25);
+    color: #93c5fd;
+    font-size: .72rem;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+/* Diagram */
+
+/* Animated Bohr-style electron illustration */
+.electron-orbit-rotor {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    animation: electron-orbit var(--orbit-duration, 12s) linear infinite;
+    animation-direction: var(--orbit-direction, normal);
+    will-change: transform;
+}
+@keyframes electron-orbit {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+.electron-diagram .electron {
+    box-shadow: 0 0 7px rgba(204,225,255,.5);
+}
+.electron-diagram .electron.outer {
+    box-shadow: 0 0 12px rgba(96,165,250,.85);
+}
+@media (prefers-reduced-motion: reduce) {
+    .electron-orbit-rotor { animation: none !important; }
+}
+
+
+.electron-diagram {
+    position: relative;
+    width: min(360px, 100%);
+    aspect-ratio: 1;
+    margin: 8px auto 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.electron-shell {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    border: 1.5px solid #354250;
+    border-radius: 50%;
+    box-sizing: border-box;
+}
+
+.electron-shell.outermost {
+    border: 2px solid #60a5fa;
+    box-shadow:
+        0 0 0 3px rgba(96,165,250,.06),
+        0 0 18px rgba(96,165,250,.14);
+}
+
+.electron-nucleus {
+    position: absolute;
+    z-index: 5;
+    width: 65px;
+    height: 65px;
+    border-radius: 50%;
+    background:
+        radial-gradient(circle at 35% 30%, #26394b, #121b24);
+    border: 2px solid #64748b;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 22px rgba(0,0,0,.45);
+}
+
+.nucleus-symbol {
+    font-size: 1.15rem;
+    font-weight: 900;
+}
+
+.nucleus-number {
+    margin-top: 2px;
+    color: #8d9aaa;
+    font-size: .62rem;
+}
+
+.electron {
+    position: absolute;
+    width: 9px;
+    height: 9px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: #cbd5e1;
+    border: 2px solid #0b0f14;
+    box-sizing: content-box;
+}
+
+.electron.outer {
+    width: 12px;
+    height: 12px;
+    background: #60a5fa;
+    box-shadow: 0 0 10px rgba(96,165,250,.8);
+}
+
+.shell-info {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+}
+
+.shell-count {
+    padding: 7px 9px;
+    border-radius: 7px;
+    background: #111820;
+    border: 1px solid var(--border);
+    color: #b8c3cf;
+    font-size: .7rem;
+}
+
+.shell-count.outer {
+    border-color: #60a5fa;
+    color: #bfdbfe;
+    background: rgba(96,165,250,.1);
+    font-weight: 800;
+}
+
+/* =========================
+   DESCRIPTION
+========================= */
+
+.description {
+    margin-top: 20px;
+    color: #b5c0cb;
+    font-size: .85rem;
+    line-height: 1.6;
+}
+
+/* =========================
+   BACK BUTTON
+========================= */
+
+.back-btn {
+    width: 100%;
+    margin-top: 20px;
+    padding: 11px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    background: #111820;
+    color: #cbd5e1;
+}
+
+.back-btn:hover {
+    background: #19232d;
+    color: white;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 1000px) {
+    .main-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .info-panel {
+        position: relative;
+        top: auto;
+        order: -1;
+    }
+}
+
+@media (max-width: 600px) {
+    .container {
+        width: min(100% - 18px, 1500px);
+    }
+
+    header {
+        padding-top: 24px;
+    }
+
+    .header-top {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .search-area {
+        flex-direction: column;
+    }
+
+    .clear-btn {
+        min-height: 44px;
+    }
+
+    .info-panel {
+        padding: 17px;
+    }
+
+    .electron-diagram {
+        width: min(360px, 100%);
+    }
+}
+
+/* Japanese textile-inspired element information panel */
+.info-panel {
+    --japan-ink: #32665d;
+    --japan-base: #5b8c81;
+    --japan-light: #f5e5c8;
+    background: #f8f1e5;
+    color: #302838;
+    border: 2px solid #d5b984;
+    box-shadow: 0 16px 40px rgba(0,0,0,.24);
+    overflow: hidden;
+}
+.info-panel .info-label {
+    color: #866540;
+    font-family: Georgia, serif;
+    letter-spacing: .17em;
+}
+.info-panel .info-heading {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 22px 14px;
+    margin: 12px 0 16px;
+    border-radius: 12px;
+    border: 3px double rgba(255,255,255,.72);
+    color: #fffdf7;
+    text-align: center;
+    background-image: linear-gradient(145deg, rgba(28,20,32,.08), rgba(28,20,32,.30)), url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22144%22%20height%3D%22144%22%20viewBox%3D%220%200%20144%20144%22%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%22.24%22%20stroke-width%3D%222%22%3E%3Cpath%20d%3D%22M-36%2048a36%2036%200%200%201%2072%200m-54%200a18%2018%200%200%201%2036%200M36%2048a36%2036%200%200%201%2072%200M54%2048a18%2018%200%200%201%2036%200M108%2048a36%2036%200%200%201%2072%200M-36%20120a36%2036%200%200%201%2072%200m-54%200a18%2018%200%200%201%2036%200M36%20120a36%2036%200%200%201%2072%200M54%20120a18%2018%200%200%201%2036%200M108%20120a36%2036%200%200%201%2072%200%22%2F%3E%3C%2Fg%3E%3Cg%20fill%3D%22%23fff%22%20fill-opacity%3D%22.17%22%20transform%3D%22translate%2872%2083%29%22%3E%3Cellipse%20rx%3D%227%22%20ry%3D%2217%22%20transform%3D%22rotate%280%29%20translate%280%20-10%29%22%2F%3E%3Cellipse%20rx%3D%227%22%20ry%3D%2217%22%20transform%3D%22rotate%2872%29%20translate%280%20-10%29%22%2F%3E%3Cellipse%20rx%3D%227%22%20ry%3D%2217%22%20transform%3D%22rotate%28144%29%20translate%280%20-10%29%22%2F%3E%3Cellipse%20rx%3D%227%22%20ry%3D%2217%22%20transform%3D%22rotate%28216%29%20translate%280%20-10%29%22%2F%3E%3Cellipse%20rx%3D%227%22%20ry%3D%2217%22%20transform%3D%22rotate%28288%29%20translate%280%20-10%29%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E");
+    background-color: var(--japan-base);
+    background-size: auto, 144px 144px;
+    box-shadow: 0 8px 18px rgba(60,34,44,.2);
+}
+.info-panel .big-symbol {
+    margin: auto;
+    width: 106px;
+    height: 106px;
+    border: 3px double #fff7e5;
+    border-radius: 18px;
+    background: var(--japan-ink);
+    color: #fff9ec;
+    font-family: Georgia, serif;
+    font-size: 3.5rem;
+    box-shadow: 0 6px 0 rgba(0,0,0,.16);
+}
+.info-panel .info-heading h2 {
+    font-family: Georgia, 'Times New Roman', serif;
+    text-transform: uppercase;
+    letter-spacing: .055em;
+    font-size: clamp(1.35rem, 2vw, 1.85rem);
+    overflow-wrap: anywhere;
+    text-shadow: 0 2px 3px rgba(0,0,0,.28);
+}
+.info-panel .info-heading p {
+    color: #fff7de;
+    font-weight: 700;
+}
+.info-panel .info-card {
+    background: #fffaf0;
+    border: 1px solid #e1d2b6;
+    border-radius: 8px;
+}
+.info-panel .info-card-label { color: #7a675d; }
+.info-panel .info-card-value { color: #3c3040; }
+.info-panel .electron-section {
+    border-top: 1px solid #cdb994;
+}
+.info-panel .section-title strong { color: #503c48; }
+.info-panel .valence-badge {
+    background: #efe0ef;
+    color: #633e65;
+    border-color: #cfaed1;
+}
+.info-panel .shell-count {
+    background: #fffaf0;
+    border-color: #dbc8a7;
+    color: #5e4b52;
+}
+.info-panel .shell-count.outer {
+    background: #ead5eb;
+    color: #62356b;
+    border-color: #cda7d1;
+}
+.info-panel .description {
+    background: #fffaf0;
+    color: #463843;
+    border-left: 4px solid var(--japan-base);
+    padding: 13px;
+    border-radius: 5px;
+    font-family: Georgia, serif;
+    font-size: .94rem;
+    line-height: 1.6;
+}
+.info-panel .back-btn {
+    background: var(--japan-ink);
+    border-color: var(--japan-ink);
+    color: #fff9eb;
+}
+.info-panel .back-btn:hover { background: var(--japan-base); color: white; }
+@keyframes japaneseReveal {
+    from { opacity: .65; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.info-panel .info-heading.reveal { animation: japaneseReveal .4s ease-out; }
+@media (prefers-reduced-motion: reduce) {
+    .info-panel .info-heading.reveal { animation: none; }
+}
+
+
+/* Additional textile patterns are selected dynamically for each element. */
+.info-panel .info-heading {
+    background-image: linear-gradient(145deg, rgba(28,20,32,.05), rgba(28,20,32,.34)), var(--japanese-pattern);
+    background-size: auto, 144px 144px;
+}
+
+/* Electron configuration desk */
+.configuration-section { margin-top: 22px; padding-top: 18px; border-top: 1px solid #cdb994; }
+.configuration-section h3 { margin: 0 0 12px; font-size: .98rem; color: #503c48; }
+.configuration-card { background: #fffaf0; border: 1px solid #dbc8a7; border-radius: 9px; padding: 12px; margin-bottom: 9px; }
+.configuration-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 9px; }
+.configuration-label { font-size: .72rem; font-weight: 700; color: #75615c; }
+.configuration-value { color: #332d3c; font-size: .9rem; line-height: 1.8; overflow-wrap: anywhere; word-spacing: .1em; }
+.configuration-value sup { font-size: .7em; line-height: 0; }
+.configuration-copy { background: #efe4d5; color: #594455; border: 1px solid #d6c2a7; border-radius: 6px; padding: 5px 9px; font-size: .72rem; }
+.configuration-copy:hover { background: #e6d5c0; }
+.configuration-note { margin: 8px 0 0; color: #796458; font-size: .73rem; line-height: 1.5; }
+
+
+/* Subtle refinement — original dark Japanese aesthetic retained */
+.table-panel {
+    position: relative;
+    padding: 16px 14px 18px;
+    border: 1px solid rgba(199,165,111,.32);
+    border-radius: 16px;
+    background: linear-gradient(155deg, rgba(27,35,45,.82), rgba(12,18,26,.94));
+    box-shadow: inset 0 1px 0 rgba(255,236,198,.07), 0 14px 32px rgba(0,0,0,.16);
+}
+.table-panel::before {
+    content: '';
+    display: block;
+    height: 2px;
+    margin: 0 0 14px;
+    background: linear-gradient(90deg, transparent, rgba(215,181,122,.78) 20%, rgba(215,181,122,.35) 80%, transparent);
+}
+.table-scroll { scrollbar-color: #7b6856 #17202a; scrollbar-width: thin; }
+.element {
+    border-color: rgba(236,209,165,.25);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 2px 4px rgba(0,0,0,.13);
+    transition: transform .2s ease, filter .2s ease, opacity .2s ease,
+                border-color .2s ease, box-shadow .2s ease;
+}
+.element:hover, .element:focus-visible {
+    transform: translateY(-3px);
+    border-color: #e6c58e;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.19), 0 5px 14px rgba(0,0,0,.35), 0 0 0 1px rgba(230,197,142,.18);
+}
+.element:focus-visible { outline: 2px solid #f2d6a1; outline-offset: 2px; }
+.element-symbol { letter-spacing: -.035em; text-shadow: 0 1px 3px rgba(0,0,0,.23); }
+.legend { padding-top: 13px; border-top: 1px solid rgba(211,177,121,.16); }
+.legend button {
+    border-color: rgba(198,167,117,.27);
+    border-radius: 8px;
+    transition: background .18s ease, border-color .18s ease, transform .18s ease;
+}
+.legend button:hover { transform: translateY(-1px); border-color: #caa777; }
+.legend button.active { border-color: #d6b681; box-shadow: inset 0 0 0 1px rgba(214,182,129,.18); }
+.search-area input { border-color: rgba(198,167,117,.32); }
+.search-area input:focus { border-color: #d6b681; box-shadow: 0 0 0 3px rgba(214,182,129,.13); }
+.clear-btn { border-color: rgba(198,167,117,.32); }
+@media (max-width: 600px) {
+    .table-panel { padding: 12px 9px 14px; border-radius: 12px; }
+    .table-panel::before { margin-bottom: 10px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .element, .legend button { transition: none; }
+    .element:hover, .element:focus-visible, .legend button:hover { transform: none; }
+}
+
+
+/* High-contrast f-block series markers — restore clear visual hierarchy. */
+.periodic-table .f-label {
+    position: relative;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: clamp(.9rem, 1.1vw, 1.04rem);
+    font-weight: 900;
+    letter-spacing: .01em;
+    line-height: 1.15;
+    color: #30212d;
+    background: linear-gradient(145deg, #fff4d8 0%, #e9c889 100%);
+    border: 3px solid #ffe3a5;
+    border-left: 6px solid #bd7a36;
+    border-radius: 10px;
+    box-shadow: 0 0 0 2px rgba(255,219,152,.22), 0 5px 16px rgba(0,0,0,.4);
+    text-shadow: 0 1px 0 rgba(255,255,255,.55);
+    padding: 6px 4px;
+    overflow-wrap: normal;
+}
+.periodic-table .f-label.actinide-series {
+    color: #301d3c;
+    background: linear-gradient(145deg, #f8e8ff 0%, #d7b4e8 100%);
+    border-color: #efd5ff;
+    border-left-color: #9452a9;
+    box-shadow: 0 0 0 2px rgba(228,185,250,.23), 0 5px 16px rgba(0,0,0,.4);
+}
+
+
+/* ===== Version 2: Moonlit Japan visual system ===== */
+:root { --bg:#070e19; --panel:#0c1724; --border:#85683f; --accent:#dfbb78; --accent-soft:rgba(223,187,120,.17); }
+body { background:radial-gradient(ellipse at 70% 13%,rgba(41,71,94,.48),transparent 40%),radial-gradient(ellipse at 12% 65%,rgba(25,45,67,.75),transparent 58%),#060d17; color:#f7eddb; }
+body::before {content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.23;background-image:radial-gradient(circle at 78% 16%,#f9d795 0 43px,transparent 45px),linear-gradient(150deg,transparent 0 48%,#162d3b 48.2% 49.2%,transparent 49.5%),linear-gradient(25deg,transparent 0 50%,#182f3e 50.2% 51.3%,transparent 51.6%),repeating-radial-gradient(ellipse at 50% 110%,transparent 0 36px,rgba(204,167,101,.2) 38px 40px,transparent 42px 66px);}
+.container {width:min(1770px,calc(100% - 32px));}
+header {padding:27px 0 20px;}
+h1 {font-family:Georgia,'Times New Roman',serif;font-size:clamp(2rem,3.1vw,3.6rem);letter-spacing:-.025em;color:#f1d39c;text-shadow:0 3px 14px #000;}
+h1::after {content:none;display:none;}
+.subtitle {color:#b8a990;font-family:Georgia,serif;}
+.search-area {max-width:920px;margin:18px 0 19px;}
+.search-area input {background:rgba(7,15,26,.9);border:1px solid #ab8755;border-radius:25px;color:#f7eddb;}
+.clear-btn {background:#172638;border-color:#b38a4e;color:#f0d7a8;border-radius:25px;}
+.main-layout {grid-template-columns:minmax(0,1fr) 405px;gap:18px;}
+.table-panel {position:relative;background:linear-gradient(140deg,rgba(8,20,33,.94),rgba(7,13,23,.93));border:1px solid #b68c50;border-radius:22px;padding:19px 13px 20px;box-shadow:inset 0 0 0 3px rgba(188,141,77,.08),0 15px 38px #0009;}
+.table-panel::before {content:'✦  THE ELEMENTS  ✦';font:700 12px Georgia,serif;letter-spacing:.25em;color:#e6c28c;text-align:center;display:block;margin:0 0 14px;}
+.periodic-table {grid-template-rows:repeat(9,72px);gap:5px;}
+.element {border:1px solid rgba(245,216,156,.35);border-radius:8px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.05),inset 0 -15px 20px rgba(0,0,0,.12);isolation:isolate;}
+.element::before {content:'';position:absolute;inset:0;z-index:-1;opacity:.22;background-image:repeating-radial-gradient(circle at 85% 105%,transparent 0 8px,#fff 9px 10px,transparent 11px 18px);pointer-events:none;}
+.element::after {content:'✦';position:absolute;bottom:3px;right:5px;color:#f5e1ac;opacity:.35;font-size:10px;pointer-events:none;}
+.element:hover,.element:focus-visible {transform:translateY(-4px) scale(1.045);border-color:#ffdda2;box-shadow:0 0 0 1px #e8bb79,0 10px 24px #000b,0 0 18px rgba(246,199,119,.24);}
+.element-symbol {font-family:Georgia,'Times New Roman',serif;font-size:1.5rem;text-shadow:0 2px 4px #0007;}
+.element-name {color:#fff0d4;}
+.legend {border-top:1px solid #8b693d;margin-top:18px;}
+.legend button {font-family:Georgia,serif;background:linear-gradient(140deg,#19283b,#101b2b);border:1px solid #80643e;color:#f0d6a5;border-radius:8px;}
+.legend button.active {background:#e8c992;color:#2b1b1b;border-color:#ffe5ad;}
+.info-panel {background:linear-gradient(160deg,#101c2b,#080f1c);border:2px solid #d0a562;border-radius:22px;padding:15px;color:#f8e8c9;box-shadow:inset 0 0 0 3px rgba(215,166,88,.09),0 18px 38px #0009;}
+.info-panel .info-label {color:#e7c58d;text-align:center;}
+.info-panel .info-heading {position:relative;min-height:300px;margin:12px 0 15px;padding:17px 12px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:8px;border:3px double #f0c784;border-radius:13px;overflow:hidden;background-image:linear-gradient(0deg,rgba(6,8,16,.86),rgba(9,13,21,.04) 65%),var(--japanese-pattern);background-color:var(--japan-base);background-size:auto,110px 110px;}
+.info-panel .info-heading::before {content:attr(data-element-name);position:absolute;top:10px;left:-4px;right:-4px;text-align:center;font-family:Georgia,'Times New Roman',serif;font-weight:900;font-size:clamp(2.7rem,5vw,5.1rem);line-height:1.03;letter-spacing:-.06em;text-transform:uppercase;color:#fff5d9;opacity:.87;text-shadow:0 4px 12px #0008;overflow-wrap:anywhere;pointer-events:none;}
+.info-panel .big-symbol {position:relative;z-index:1;width:122px;height:122px;flex:none;border:3px double #f5dfb7;border-radius:20px;background:#090d17;color:#fff9e9;font-size:3.7rem;box-shadow:0 0 0 5px #090d17a6,0 9px 26px #000b;}
+.info-panel .info-heading h2 {position:relative;z-index:1;font-family:Georgia,serif;font-size:1.6rem;color:#fff2d5;text-shadow:0 2px 5px #000;}
+.info-panel .info-heading p {position:relative;z-index:1;color:#f5d8a4;}
+.info-panel .info-card {background:#132233;border:1px solid #67583f;}
+.info-panel .info-card-label {color:#c1b39d;}
+.info-panel .info-card-value {color:#fff1d7;}
+.info-panel .electron-section {border-color:#80643e;}
+.info-panel .section-title strong {color:#f6dcae;}
+.info-panel .valence-badge {background:#28334a;color:#f0d19a;border-color:#927248;}
+.info-panel .shell-count {background:#152337;color:#e4d2b6;border-color:#6e5b3e;}
+.info-panel .shell-count.outer {background:#2c304d;color:#f0d5f3;border-color:#a97bb7;}
+.info-panel .description {background:#122132;color:#e6d8c2;border-left-color:#cda46c;}
+.info-panel .back-btn {background:#23354a;color:#f7dcb1;border-color:#af8955;}
+.info-panel .back-btn:hover {background:#354b63;color:#fff;}
+.periodic-table .f-label {background:linear-gradient(140deg,#f8dca7,#b98243);color:#211729;border-color:#ffdf9e;}
+.periodic-table .f-label.actinide-series {background:linear-gradient(140deg,#efd4ff,#9d69b5);color:#211729;border-color:#f2d6ff;}
+@media(max-width:1100px){.main-layout{grid-template-columns:1fr}.info-panel{position:relative;top:auto;order:-1;max-width:720px;width:100%;margin:auto}.info-panel .info-heading{min-height:290px}.info-panel .info-heading::before{font-size:clamp(2.8rem,8vw,5.5rem)}}
+@media(max-width:600px){.container{width:calc(100% - 18px)}.table-panel{padding:12px 8px}.info-panel{padding:12px}.info-panel .info-heading{min-height:265px}.info-panel .info-heading::before{font-size:clamp(2.3rem,11vw,4rem)}.info-panel .big-symbol{width:105px;height:105px;font-size:3rem}}
+
+
+/* Moonlit Japan V2.1: scenic, polished and responsive */
+body {background:linear-gradient(180deg,rgba(3,8,17,.12),#07111f 840px),url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%201600%20450%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22sky%22%20x2%3D%220%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%23081226%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%231b2d40%22%2F%3E%3C%2FlinearGradient%3E%3CradialGradient%20id%3D%22moon%22%3E%3Cstop%20stop-color%3D%22%23fff5c9%22%2F%3E%3Cstop%20offset%3D%22.75%22%20stop-color%3D%22%23edc98d%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23b97d4a%22%2F%3E%3C%2FradialGradient%3E%3C%2Fdefs%3E%3Cpath%20fill%3D%22url%28%23sky%29%22%20d%3D%22M0%200h1600v450H0z%22%2F%3E%3Cg%20fill%3D%22%23e7c994%22%20opacity%3D%22.7%22%3E%3Ccircle%20cx%3D%22110%22%20cy%3D%2265%22%20r%3D%222%22%2F%3E%3Ccircle%20cx%3D%22300%22%20cy%3D%2295%22%20r%3D%221.5%22%2F%3E%3Ccircle%20cx%3D%22510%22%20cy%3D%2245%22%20r%3D%222%22%2F%3E%3Ccircle%20cx%3D%22960%22%20cy%3D%2270%22%20r%3D%221.5%22%2F%3E%3Ccircle%20cx%3D%221300%22%20cy%3D%2260%22%20r%3D%222%22%2F%3E%3Ccircle%20cx%3D%221480%22%20cy%3D%22125%22%20r%3D%222%22%2F%3E%3C%2Fg%3E%3Ccircle%20cx%3D%221210%22%20cy%3D%22140%22%20r%3D%2287%22%20fill%3D%22url%28%23moon%29%22%20opacity%3D%22.9%22%2F%3E%3Cpath%20fill%3D%22%23182d41%22%20d%3D%22M0%20325%20240%20205%20360%20260%20590%2080%20810%20275%20970%20190%201120%20320%201350%20220%201600%20330v120H0z%22%2F%3E%3Cpath%20fill%3D%22%23e5d5c1%22%20opacity%3D%22.85%22%20d%3D%22m485%20166%20105-86%20110%20142-95-67-28%2031-26-25-25%2031z%22%2F%3E%3Cpath%20fill%3D%22%230b1b2c%22%20d%3D%22M0%20365%20180%20295%20340%20355%20510%20285%20690%20360%20870%20300%201030%20345%201210%20290%201400%20365%201600%20310v140H0z%22%2F%3E%3Cg%20fill%3D%22%23070f1c%22%3E%3Cpath%20d%3D%22M0%20390h1600v60H0z%22%2F%3E%3Cpath%20d%3D%22M180%20365h12v65h-12zM147%20365h79v9h-79zM161%20345h51v9h-51zM169%20330h35v8h-35zM1400%20360h13v70h-13zM1370%20360h72v8h-72zM1382%20342h48v8h-48zM1390%20326h32v8h-32z%22%2F%3E%3C%2Fg%3E%3Cg%20stroke%3D%22%23c18c53%22%20stroke-width%3D%225%22%20fill%3D%22none%22%3E%3Cpath%20d%3D%22M1030%20338v82m92-82v82m-115-82h138m-129-12h120m-115-12h110%22%2F%3E%3C%2Fg%3E%3Cg%20fill%3D%22%23f1a7b6%22%20opacity%3D%22.88%22%3E%3Ccircle%20cx%3D%2272%22%20cy%3D%22122%22%20r%3D%227%22%2F%3E%3Ccircle%20cx%3D%2290%22%20cy%3D%22140%22%20r%3D%225%22%2F%3E%3Ccircle%20cx%3D%2258%22%20cy%3D%22150%22%20r%3D%226%22%2F%3E%3Ccircle%20cx%3D%221510%22%20cy%3D%2295%22%20r%3D%228%22%2F%3E%3Ccircle%20cx%3D%221480%22%20cy%3D%22118%22%20r%3D%226%22%2F%3E%3Ccircle%20cx%3D%221540%22%20cy%3D%22140%22%20r%3D%227%22%2F%3E%3Ccircle%20cx%3D%22420%22%20cy%3D%22255%22%20r%3D%224%22%2F%3E%3Ccircle%20cx%3D%22925%22%20cy%3D%22110%22%20r%3D%225%22%2F%3E%3C%2Fg%3E%3Cg%20stroke%3D%22%23cda16d%22%20fill%3D%22none%22%20stroke-width%3D%222%22%20opacity%3D%22.7%22%3E%3Cpath%20d%3D%22M55%20195q30-18%2060%200t60%200m110-30q40-20%2080%200t80%200m880%2035q40-18%2080%200t80%200%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E") center top / 1600px 450px repeat-x,#07111f;}
+body::before {display:none;}
+header {min-height:194px;padding:28px 10px 18px;position:relative;}
+header::after {content:'✿   ✦   ✿';position:absolute;right:22px;top:15px;color:#e6b2bd;letter-spacing:1.2em;opacity:.75;pointer-events:none;}
+h1 {max-width:850px;text-shadow:0 3px 8px #050c19,0 0 20px #050c19;}
+.subtitle {color:#ead9bb;text-shadow:0 2px 6px #050c19;}
+.search-area {max-width:690px;}
+.main-layout {gap:20px;}
+.table-panel {background:linear-gradient(180deg,rgba(5,13,24,.67),rgba(5,12,23,.94) 68%),url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%201600%20450%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22sky%22%20x2%3D%220%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%23081226%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%231b2d40%22%2F%3E%3C%2FlinearGradient%3E%3CradialGradient%20id%3D%22moon%22%3E%3Cstop%20stop-color%3D%22%23fff5c9%22%2F%3E%3Cstop%20offset%3D%22.75%22%20stop-color%3D%22%23edc98d%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23b97d4a%22%2F%3E%3C%2FradialGradient%3E%3C%2Fdefs%3E%3Cpath%20fill%3D%22url%28%23sky%29%22%20d%3D%22M0%200h1600v450H0z%22%2F%3E%3Cg%20fill%3D%22%23e7c994%22%20opacity%3D%22.7%22%3E%3Ccircle%20cx%3D%22110%22%20cy%3D%2265%22%20r%3D%222%22%2F%3E%3Ccircle%20cx%3D%22300%22%20cy%3D%2295%22%20r%3D%221.5%22%2F%3E%3Ccircle%20cx%3D%22510%22%20cy%3D%2245%22%20r%3D%222%22%2F%3E%3Ccircle%20cx%3D%22960%22%20cy%3D%2270%22%20r%3D%221.5%22%2F%3E%3Ccircle%20cx%3D%221300%22%20cy%3D%2260%22%20r%3D%222%22%2F%3E%3Ccircle%20cx%3D%221480%22%20cy%3D%22125%22%20r%3D%222%22%2F%3E%3C%2Fg%3E%3Ccircle%20cx%3D%221210%22%20cy%3D%22140%22%20r%3D%2287%22%20fill%3D%22url%28%23moon%29%22%20opacity%3D%22.9%22%2F%3E%3Cpath%20fill%3D%22%23182d41%22%20d%3D%22M0%20325%20240%20205%20360%20260%20590%2080%20810%20275%20970%20190%201120%20320%201350%20220%201600%20330v120H0z%22%2F%3E%3Cpath%20fill%3D%22%23e5d5c1%22%20opacity%3D%22.85%22%20d%3D%22m485%20166%20105-86%20110%20142-95-67-28%2031-26-25-25%2031z%22%2F%3E%3Cpath%20fill%3D%22%230b1b2c%22%20d%3D%22M0%20365%20180%20295%20340%20355%20510%20285%20690%20360%20870%20300%201030%20345%201210%20290%201400%20365%201600%20310v140H0z%22%2F%3E%3Cg%20fill%3D%22%23070f1c%22%3E%3Cpath%20d%3D%22M0%20390h1600v60H0z%22%2F%3E%3Cpath%20d%3D%22M180%20365h12v65h-12zM147%20365h79v9h-79zM161%20345h51v9h-51zM169%20330h35v8h-35zM1400%20360h13v70h-13zM1370%20360h72v8h-72zM1382%20342h48v8h-48zM1390%20326h32v8h-32z%22%2F%3E%3C%2Fg%3E%3Cg%20stroke%3D%22%23c18c53%22%20stroke-width%3D%225%22%20fill%3D%22none%22%3E%3Cpath%20d%3D%22M1030%20338v82m92-82v82m-115-82h138m-129-12h120m-115-12h110%22%2F%3E%3C%2Fg%3E%3Cg%20fill%3D%22%23f1a7b6%22%20opacity%3D%22.88%22%3E%3Ccircle%20cx%3D%2272%22%20cy%3D%22122%22%20r%3D%227%22%2F%3E%3Ccircle%20cx%3D%2290%22%20cy%3D%22140%22%20r%3D%225%22%2F%3E%3Ccircle%20cx%3D%2258%22%20cy%3D%22150%22%20r%3D%226%22%2F%3E%3Ccircle%20cx%3D%221510%22%20cy%3D%2295%22%20r%3D%228%22%2F%3E%3Ccircle%20cx%3D%221480%22%20cy%3D%22118%22%20r%3D%226%22%2F%3E%3Ccircle%20cx%3D%221540%22%20cy%3D%22140%22%20r%3D%227%22%2F%3E%3Ccircle%20cx%3D%22420%22%20cy%3D%22255%22%20r%3D%224%22%2F%3E%3Ccircle%20cx%3D%22925%22%20cy%3D%22110%22%20r%3D%225%22%2F%3E%3C%2Fg%3E%3Cg%20stroke%3D%22%23cda16d%22%20fill%3D%22none%22%20stroke-width%3D%222%22%20opacity%3D%22.7%22%3E%3Cpath%20d%3D%22M55%20195q30-18%2060%200t60%200m110-30q40-20%2080%200t80%200m880%2035q40-18%2080%200t80%200%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E") center 15% / 1350px auto no-repeat; border:2px solid #bb8a4b;box-shadow:inset 0 0 0 3px #0b1627,inset 0 0 0 5px #8d653a55,0 16px 40px #000a;}
+.table-panel::before {content:'❀   THE ELEMENTS   ❀';font-size:13px;color:#f5d39a;text-shadow:0 2px 8px #000;}
+.element {background-blend-mode:soft-light,normal;border-color:#d9b47a88;box-shadow:inset 0 0 0 1px #ffffff14,inset 0 -20px 22px #02071355,0 2px 5px #0005;}
+.element::before {opacity:.24;background-image:radial-gradient(ellipse at 85% 95%,#f7d79a 0 2px,transparent 3px),repeating-radial-gradient(ellipse at 25% 105%,transparent 0 9px,#f4e3c7 10px 11px,transparent 12px 20px);}
+.element::after {content:'❀';font-size:11px;opacity:.44;}
+.element:hover,.element:focus-visible {z-index:20;filter:saturate(1.18);}
+.legend {gap:8px;padding-top:17px;}
+.legend button {box-shadow:inset 0 1px 0 #ffffff16,0 3px 8px #0004;}
+.info-panel {border:2px solid #e3b66d;box-shadow:inset 0 0 0 3px #091422,inset 0 0 0 5px #a9793c77,0 18px 40px #000a;}
+.info-panel .info-heading {min-height:345px;border:2px solid #f1c67c;box-shadow:inset 0 0 0 4px #11152488,0 8px 22px #0009;background-image:linear-gradient(0deg,#080c1bee,transparent 52%),linear-gradient(145deg,#fae0a122,#130d1b44),var(--japanese-pattern);background-size:auto,auto,112px 112px;}
+.info-panel .info-heading::before {font-size:clamp(2.7rem,4.4vw,4.8rem);color:#fff4da;text-shadow:2px 3px 5px #000;}
+.info-panel .big-symbol {border-radius:16px;box-shadow:0 0 0 4px #0a0c17c9,0 0 0 6px #f0c88f,0 8px 25px #000b;}
+.periodic-table .f-label,.periodic-table .f-label.actinide-series {box-shadow:inset 0 0 0 2px #ffffff55,0 0 0 1px #16101e,0 5px 14px #0008;}
+@media(max-width:1100px){header{min-height:155px}.info-panel{max-width:720px}}
+@media(max-width:600px){body{background-size:auto,1100px 310px,auto}header{min-height:160px}header::after{display:none}.info-panel .info-heading{min-height:285px}.table-panel{background-size:auto,1000px auto}}
+@media(prefers-reduced-motion:reduce){.element{transition:none}}
+
+
+/* Saturated category palettes beneath the transparent SVG illustrations. */
+.periodic-table .element.alkali {--tile-color:linear-gradient(150deg,#a3293b,#571a30)}
+.periodic-table .element.alkaline {--tile-color:linear-gradient(150deg,#bb7821,#60320e)}
+.periodic-table .element.transition {--tile-color:linear-gradient(150deg,#127eb8,#08335f)}
+.periodic-table .element.post-transition {--tile-color:linear-gradient(150deg,#637caa,#303d69)}
+.periodic-table .element.metalloid {--tile-color:linear-gradient(150deg,#157b78,#124448)}
+.periodic-table .element.nonmetal {--tile-color:linear-gradient(150deg,#178c67,#114d3e)}
+.periodic-table .element.halogen {--tile-color:linear-gradient(150deg,#a444ac,#542466)}
+.periodic-table .element.noble {--tile-color:linear-gradient(150deg,#7946d0,#392778)}
+.periodic-table .element.lanthanide {--tile-color:linear-gradient(150deg,#d38a28,#754316)}
+.periodic-table .element.actinide {--tile-color:linear-gradient(150deg,#a044ae,#50205d)}
+
+/* Moonlit illustrated element cards — preview refinement */
+.periodic-table .element {
+    background-image: linear-gradient(180deg,rgba(0,0,0,.02) 0%,rgba(0,0,0,.05) 47%,rgba(0,0,0,.2) 100%), var(--element-landscape), var(--tile-color);
+    background-size: 100% 100%, cover, 100% 100%;
+    background-position: center;
+    border: 1px solid rgba(234,200,149,.54);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.2), inset 0 -9px 14px rgba(0,0,0,.2), 0 2px 5px rgba(0,0,0,.45);
+}
+.periodic-table .element::before {opacity:.12;}
+.periodic-table .element::after {opacity:.25;}
+.periodic-table .element-number,.periodic-table .element-symbol,
+.periodic-table .element-name,.periodic-table .element-mass {
+    position:relative; z-index:1; text-shadow:0 1px 3px rgba(0,0,0,.9);
+}
+.periodic-table .element-number {position:absolute;}
+.periodic-table .element-symbol {font-family:Georgia,'Times New Roman',serif;font-weight:700;}
+.periodic-table .element:hover,.periodic-table .element:focus-visible {
+    border-color:#ffe0a6;
+    box-shadow:0 0 0 1px #edc17c,0 8px 22px #000b,0 0 18px #d7a65a55;
+}
+
+/* Keep the language control conspicuous and above all scenery. */
+.language-switch { position:fixed !important; top:18px; right:26px; z-index:9999 !important; background:#101d2d !important; border:2px solid #e8c68b !important; }
+@media(max-width:600px){.language-switch{top:10px;right:10px}.language-switch button{padding:8px 11px}}
+/* Vietnamese category labels: prevent clipped glyphs and cramped buttons. */
+.legend { display:flex; flex-wrap:wrap; gap:9px; align-items:stretch; overflow:visible; }
+.legend button { box-sizing:border-box; width:auto; min-width:max-content; max-width:none; flex:0 0 auto; white-space:nowrap; overflow:visible; text-overflow:clip; word-break:normal; line-height:1.5; padding:9px 13px; font-family:Arial, "Noto Sans", sans-serif; font-size:12px; letter-spacing:0; }
+@media (max-width:600px) { .legend { gap:7px; } .legend button { padding:8px 10px; font-size:12px; } }
+/* Vietnamese header: readable diacritics and restrained heading scale. */
+html[lang="vi"] .header-top > div:first-child { min-width:0; flex:1 1 auto; }
+html[lang="vi"] .header-top h1 {
+  font-family: "Segoe UI", "Noto Sans", Arial, sans-serif;
+  font-size: clamp(1.75rem, 2.45vw, 2.8rem);
+  font-weight: 750;
+  line-height: 1.23;
+  letter-spacing: -0.025em;
+  max-width: 850px;
+  text-wrap: balance;
+}
+html[lang="vi"] .header-top .subtitle {
+  font-family: "Segoe UI", "Noto Sans", Arial, sans-serif;
+  font-size: clamp(.88rem, 1vw, 1rem);
+  line-height: 1.55;
+  letter-spacing: 0;
+  max-width: 850px;
+}
+@media(max-width:700px) {
+  html[lang="vi"] .header-top h1 { font-size: clamp(1.55rem, 5.4vw, 2rem); }
+}
+/* Bilingual language switch */
+.header-top { align-items:center; }
+.language-switch { display:flex; gap:3px; flex-shrink:0; padding:4px; border:1px solid #c6a16b; border-radius:12px; background:#101d2d; box-shadow:0 3px 14px #0006; }
+.language-switch button { border:0; border-radius:8px; padding:10px 14px; background:transparent; color:#d4c4a9; font-weight:800; letter-spacing:.05em; }
+.language-switch button.active { background:linear-gradient(145deg,#e8c68b,#b98b4b); color:#182234; box-shadow:0 2px 7px #0007; }
+.language-switch button:focus-visible { outline:2px solid #fff; outline-offset:2px; }
+@media(max-width:600px){.header-top{flex-direction:row;align-items:flex-start;flex-wrap:wrap}.language-switch{margin-top:5px}}
+
+/* Vietnamese text: consistent glyph coverage and readable accent spacing. */
+html[lang="vi"] .info-panel .description,
+html[lang="vi"] .info-panel .info-label,
+html[lang="vi"] .info-panel .info-value,
+html[lang="vi"] .info-panel .info-subtitle,
+html[lang="vi"] .info-panel .config-note,
+html[lang="vi"] .info-panel button,
+html[lang="vi"] .subtitle,
+html[lang="vi"] .legend button {
+  font-family: "Segoe UI", Arial, "Noto Sans", sans-serif !important;
+  font-variant-ligatures: none;
+  letter-spacing: normal;
+  line-height: 1.65;
+  overflow-wrap: break-word;
+}
+html[lang="vi"] .info-panel .description {
+  font-size: 15px;
+  font-weight: 400;
+  white-space: normal;
+  word-spacing: normal;
+  text-rendering: optimizeLegibility;
+}
+
+/* Moonlit Japan interactive 3D electron visualization */
+.electron-diagram { width:min(360px,100%); height:auto; aspect-ratio:auto; display:block; }
+.atom-3d-canvas { display:block; width:100%; aspect-ratio:1; height:auto; cursor:grab; touch-action:none; border-radius:14px; border:1px solid rgba(223,187,120,.25); background:rgba(6,13,25,.25); }
+.atom-3d-canvas:active { cursor:grabbing; }
+.atom-3d-canvas:focus-visible { outline:2px solid #e6c58e; outline-offset:3px; }
+.atom-3d-hint { font: 11px/1.5 system-ui,sans-serif; color:#c8bda9; text-align:center; padding:7px 3px 0; }
+
+/* Verified encyclopedia: concise summaries with expandable details */
+.encyclopedia {margin:20px 0 24px;color:#f2e8d9;font-family:Arial,'Noto Sans',sans-serif;line-height:1.65}
+.encyclopedia h3{font-size:1.12rem;letter-spacing:.02em;color:#f1d59d;margin:0 0 10px}
+.encyclopedia .encyclopedia-intro{border-left:3px solid #d6ae70;padding:9px 13px;background:#102437;border-radius:6px;margin-bottom:12px}
+.encyclopedia details{border:1px solid #987c53a0;border-radius:10px;margin:9px 0;background:#122438}
+.encyclopedia summary{cursor:pointer;padding:12px 13px;color:#f2d6a0;font-weight:700}
+.encyclopedia .encyclopedia-body{padding:0 14px 14px;font-size:.94rem}
+.encyclopedia .fact{display:flex;justify-content:space-between;gap:14px;padding:6px 0;border-bottom:1px solid #ffffff18}
+.encyclopedia .fact span:first-child{color:#c7d5dc}
+.encyclopedia .fact span:last-child{text-align:right}
+.encyclopedia a{color:#b7dfff;text-decoration:underline;text-underline-offset:3px}
+.encyclopedia .review-status{font-size:.84rem;color:#c9c0ad}
+
+/* Keep the global language switch behind the modal drawer, not over its controls. */
+body.panel-open .language-switch{visibility:hidden!important;pointer-events:none!important}
+/* Moonlit hybrid: full-width periodic table + slide-out quick view + expanded reader */
+.main-layout{display:block!important;position:relative}
+.table-panel{width:100%;max-width:none}
+.panel-backdrop{position:fixed;inset:0;background:rgba(2,8,18,.54);backdrop-filter:blur(2px);z-index:11998;opacity:0;visibility:hidden;transition:opacity .25s,visibility .25s}
+body.panel-open .panel-backdrop{opacity:1;visibility:visible}
+#infoPanel.info-panel{position:fixed!important;right:0!important;left:auto!important;top:0!important;bottom:0!important;z-index:11999;width:min(460px,100vw)!important;max-width:none!important;height:100dvh!important;overflow-y:auto;overscroll-behavior:contain;transform:translateX(105%);transition:transform .32s ease,width .32s ease;box-sizing:border-box;margin:0!important;border-radius:18px 0 0 18px!important;scrollbar-width:thin;scrollbar-color:#a78453 #101b2a;order:unset!important}
+body.panel-open #infoPanel{transform:translateX(0)}
+body.panel-expanded #infoPanel{width:min(850px,100vw)!important}
+body.panel-expanded #infoPanel .info-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+body.panel-expanded #infoPanel .info-heading{min-height:255px}
+#infoPanel .panel-toolbar{position:sticky;top:-15px;z-index:20;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px 4px 12px;background:linear-gradient(#101c2b 85%,#101c2bdf);border-bottom:1px solid #987c5377;margin-bottom:12px}
+.panel-eyebrow{font-size:.72rem;letter-spacing:.14em;font-weight:700;color:#e7c58d}
+.panel-actions{display:flex;align-items:center;gap:7px}
+#infoPanel .panel-action{font:600 .78rem Arial,'Noto Sans',sans-serif;cursor:pointer;border:1px solid #a88959;border-radius:9px;padding:9px 11px;background:#23354a;color:#f9e5bd;white-space:nowrap}
+#infoPanel .panel-action:hover,#infoPanel .panel-action:focus-visible{background:#37506a;outline:2px solid #e2b777;outline-offset:2px}
+#infoPanel .panel-action.primary{background:#a47b44;color:#0c1725;border-color:#e5be79}
+#infoPanel .panel-action.icon-action{font-size:1rem;padding:7px 11px}
+/* In quick view, hide deep reading content; keep atomic model and overview accessible. */
+body:not(.panel-expanded) #infoPanel .encyclopedia{display:none}
+body:not(.panel-expanded) #infoPanel .configuration-section{display:none}
+body:not(.panel-expanded) #infoPanel .info-heading{min-height:210px}
+body:not(.panel-expanded) #infoPanel .info-heading::before{font-size:clamp(2.4rem,4vw,3.5rem)}
+body:not(.panel-expanded) #infoPanel .big-symbol{width:90px;height:90px;font-size:2.8rem}
+body:not(.panel-expanded) #infoPanel .info-card{padding:10px}
+body:not(.panel-expanded) #infoPanel .electron-section{margin-top:12px}
+#infoPanel #backButton{display:none}
+body.panel-open{overflow:hidden}
+@media(max-width:600px){#infoPanel.info-panel{width:100vw!important;border-radius:0!important;padding:12px!important}#infoPanel .panel-toolbar{top:-12px}.panel-eyebrow{display:none}body.panel-expanded #infoPanel .info-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(prefers-reduced-motion:reduce){#infoPanel.info-panel,.panel-backdrop{transition:none!important}}
+
+
+/* Moonlit study quiz — isolated from the element drawer */
+.quiz-launch{position:relative;z-index:5;display:flex;justify-content:flex-end;margin:0 3px 10px}.quiz-launch button{font-size:12px;min-height:30px;padding:6px 12px;box-shadow:0 2px 12px #0006}.quiz-launch button:hover{filter:brightness(1.12)}
+@media(max-width:650px){.quiz-launch{justify-content:flex-end;margin:0 2px 9px}.table-panel::before{padding-right:0}}
+.quiz-launch button,.quiz-action{border:1px solid #d8b779;border-radius:10px;background:linear-gradient(145deg,#d9b87e,#9c7643);color:#101d2d;font-weight:800;padding:11px 18px;cursor:pointer}
+.quiz-overlay{position:fixed;inset:0;z-index:20000;background:rgba(4,11,24,.85);display:none;align-items:center;justify-content:center;padding:18px;backdrop-filter:blur(8px)}
+.quiz-overlay.open{display:flex}
+.quiz-dialog{width:min(100%,590px);max-height:92vh;overflow:auto;background:linear-gradient(145deg,#1a2c46,#0c192e);color:#f5eddd;border:1px solid #c6a16b;border-radius:20px;box-shadow:0 25px 80px #000a;padding:25px;font-family:Arial,'Noto Sans',sans-serif}
+.quiz-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.quiz-head h2{margin:0;color:#f1d49b;font-size:1.4rem}
+.quiz-close{border:1px solid #a5a5a5;background:transparent;color:white;border-radius:9px;font-size:22px;cursor:pointer;padding:3px 11px}
+.quiz-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:18px 0}
+.quiz-option{border:1px solid #627997;border-radius:11px;padding:14px 9px;background:#243955;color:#fff;cursor:pointer;font:inherit;min-height:52px;overflow-wrap:anywhere}
+.quiz-option:focus-visible,.quiz-close:focus-visible,.quiz-action:focus-visible{outline:3px solid #fff;outline-offset:2px}
+.quiz-option.correct{background:#1b5947;border-color:#89e1ad}
+.quiz-option.incorrect{background:#66333b;border-color:#f4a4a4}
+.quiz-option:disabled{cursor:default;opacity:1}
+.quiz-progress{height:7px;border-radius:9px;background:#334761;overflow:hidden;margin:13px 0 20px}
+.quiz-progress>div{height:100%;background:#d9b87e;transition:width .25s}
+.quiz-question{font-size:1.2rem;font-weight:700;line-height:1.5;margin:12px 0}
+.quiz-feedback{min-height:46px;line-height:1.5;color:#e5d4b8}
+.quiz-footer{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.quiz-muted{color:#c2cde0;font-size:.92rem}
+@media(max-width:480px){.quiz-dialog{padding:17px}.quiz-options{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){.quiz-progress>div{transition:none}}
+
+/* Compact, bilingual explanations linked to the existing category filters. */
+.category-explanation{margin-top:12px;padding:13px 17px;border:1px solid rgba(214,182,129,.48);border-left:3px solid #d6b681;border-radius:9px;background:linear-gradient(115deg,rgba(23,38,57,.94),rgba(9,19,34,.95));color:#e9e2d3;box-shadow:0 5px 16px #0002}
+.category-explanation-heading{font-family:Arial,"Noto Sans",sans-serif;color:#f3d59e;font-size:13px;font-weight:700;line-height:1.55}
+.category-explanation p{font-family:Arial,"Noto Sans",sans-serif;font-size:13px;line-height:1.7;margin:5px 0 0;letter-spacing:0;overflow-wrap:break-word}
+@media(max-width:600px){.category-explanation{padding:11px 13px}.category-explanation p{font-size:12px}}
+
+
+/* Scientific context for the illustrative atom, readable in both languages. */
+#infoPanel .atom-education{margin:13px 0 4px;padding:12px 14px;border:1px solid rgba(211,170,104,.6);border-left:3px solid #e5bb7b;border-radius:10px;background:#122237;color:#f1e7d6;font:13px/1.6 Arial,"Noto Sans",sans-serif}
+#infoPanel .atom-education-title{font-weight:700;color:#f0d39e;margin-bottom:5px}
+#infoPanel .atom-education p{margin:0 0 8px;overflow-wrap:break-word}
+#infoPanel .atom-shell-summary{color:#c9e5fa;font-weight:600}
+#infoPanel .atom-controls{display:flex;justify-content:center;gap:8px;margin-top:8px}
+#infoPanel .atom-pause{border:1px solid #b9915e;background:#20354c;color:#f8dfb3;border-radius:8px;padding:7px 13px;cursor:pointer;font:600 12px Arial,"Noto Sans",sans-serif}
+#infoPanel .atom-pause:focus-visible{outline:2px solid #f0d39e;outline-offset:2px}
+
+
+/* Educational transparency footer */
+.science-footer{max-width:1180px;margin:30px auto 22px;padding:16px 20px;border-top:1px solid rgba(214,182,129,.35);color:#d7dfeb;font:13px/1.7 Arial,"Noto Sans",sans-serif;text-align:left}
+.science-footer details{border:1px solid rgba(214,182,129,.32);border-radius:11px;background:rgba(11,24,42,.85);padding:12px 16px}
+.science-footer summary{cursor:pointer;color:#efd5a6;font-weight:700;list-style-position:inside}
+.science-footer summary:focus-visible{outline:2px solid #efd5a6;outline-offset:4px}
+.science-footer p{margin:10px 0 0;line-height:1.7}
+.science-footer a{color:#b9def7;text-decoration:underline;text-underline-offset:2px}
+.science-footer .science-footer-sources{margin-top:10px}
+@media(max-width:600px){.science-footer{margin:20px 12px;padding:12px 0;font-size:12px}}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<header>
+    <div class="header-top">
+        <div>
+            <h1>Periodic Table of the Elements</h1>
+            <p class="subtitle">
+                Explore the elements and their electron structures.
+            </p>
+        </div>
+        <div class="language-switch" role="group" aria-label="Language / Ngôn ngữ">
+            <button type="button" id="langEN" class="active" aria-pressed="true">EN</button>
+            <button type="button" id="langVI" aria-pressed="false">VI</button>
+        </div>
+    </div>
+
+    <div class="search-area">
+        <input
+            id="searchInput"
+            type="search"
+            placeholder="Search element name, symbol, or atomic number..."
+            autocomplete="off"
+        >
+        <button class="clear-btn" id="clearSearch">
+            Clear
+        </button>
+    </div>
+</header>
+
+<main class="main-layout">
+
+<div class="quiz-launch"><button id="openChemQuiz" type="button">✦ Chemistry Quiz / Trắc nghiệm</button></div>
+<section class="table-panel" id="periodicTableSection">
+
+    <div class="table-scroll">
+        <div class="periodic-table" id="periodicTable"></div>
+    </div>
+
+    <div class="legend" id="legend">
+        <button data-category="all" class="active">All</button>
+        <button data-category="alkali">Alkali metals</button>
+        <button data-category="alkaline">Alkaline earth</button>
+        <button data-category="transition">Transition metals</button>
+        <button data-category="post-transition">Post-transition</button>
+        <button data-category="metalloid">Metalloids</button>
+        <button data-category="nonmetal">Nonmetals</button>
+        <button data-category="halogen">Halogens</button>
+        <button data-category="noble">Noble gases</button>
+        <button data-category="lanthanide">Lanthanides</button>
+        <button data-category="actinide">Actinides</button>
+    </div>
+    <div id="categoryExplanation" class="category-explanation" role="status" aria-live="polite">
+      <div class="category-explanation-heading" id="categoryExplanationHeading"></div>
+      <p id="categoryExplanationText"></p>
+    </div>
+
+</section>
+
+
+
+<div id="chemQuizOverlay" class="quiz-overlay" role="presentation">
+  <section class="quiz-dialog" role="dialog" aria-modal="true" aria-labelledby="quizHeading" tabindex="-1">
+    <div class="quiz-head"><h2 id="quizHeading">Chemistry Quiz</h2><button class="quiz-close" id="closeChemQuiz" type="button" aria-label="Close">×</button></div>
+    <p id="quizIntro" class="quiz-muted"></p><div class="quiz-progress"><div id="quizProgress"></div></div>
+    <p id="quizQuestion" class="quiz-question"></p><div id="quizOptions" class="quiz-options"></div>
+    <div id="quizFeedback" class="quiz-feedback" aria-live="polite"></div>
+    <div class="quiz-footer"><span id="quizScore" class="quiz-muted"></span><button class="quiz-action" id="quizNext" type="button" hidden></button></div>
+  </section>
+</div>
+<div id="panelBackdrop" class="panel-backdrop" aria-hidden="true"></div>
+<aside
+    class="info-panel"
+    id="infoPanel"
+    aria-live="polite"
+    tabindex="-1"
+>
+
+    <div class="panel-toolbar">
+      <span class="panel-eyebrow" id="panelEyebrow">ELEMENT PREVIEW</span>
+      <div class="panel-actions">
+        <button type="button" id="panelExpand" class="panel-action primary" aria-expanded="false">Explore in Detail ↗</button>
+        <button type="button" id="panelClose" class="panel-action icon-action" aria-label="Close information panel">✕</button>
+      </div>
+    </div>
+    <div class="info-label">Selected element</div>
+
+    <div class="info-heading">
+        <div class="big-symbol" id="infoSymbol">C</div>
+
+        <div>
+            <h2 id="infoName">Carbon</h2>
+            <p id="infoCategory">Nonmetal</p>
+        </div>
+    </div>
+
+    <div class="info-grid">
+
+        <div class="info-card">
+            <div class="info-card-label">Atomic number</div>
+            <div class="info-card-value" id="infoNumber">6</div>
+        </div>
+
+        <div class="info-card">
+            <div class="info-card-label">Atomic mass</div>
+            <div class="info-card-value" id="infoMass">12.011</div>
+        </div>
+
+        <div class="info-card">
+            <div class="info-card-label">Period</div>
+            <div class="info-card-value" id="infoPeriod">2</div>
+        </div>
+
+        <div class="info-card">
+            <div class="info-card-label">Group</div>
+            <div class="info-card-value" id="infoGroup">14</div>
+        </div>
+
+        <div class="info-card">
+            <div class="info-card-label">Electron shells</div>
+            <div class="info-card-value" id="infoShells">2, 4</div>
+        </div>
+
+        <div class="info-card">
+            <div class="info-card-label">Valence electrons</div>
+            <div class="info-card-value" id="infoValence">4</div>
+        </div>
+
+    </div>
+
+
+
+    <section class="configuration-section" aria-label="Electron configurations">
+        <h3>Electron configuration</h3>
+        <div class="configuration-card">
+            <div class="configuration-top"><span class="configuration-label">Full configuration</span><button class="configuration-copy" data-copy-config="full" type="button">Copy</button></div>
+            <div class="configuration-value" id="configurationFull"></div>
+        </div>
+        <div class="configuration-card">
+            <div class="configuration-top"><span class="configuration-label">Noble-gas shorthand</span><button class="configuration-copy" data-copy-config="short" type="button">Copy</button></div>
+            <div class="configuration-value" id="configurationShort"></div>
+        </div>
+        <p class="configuration-note" id="configurationNote"></p>
+    </section>
+
+    <!-- ELECTRON STRUCTURE -->
+
+    <div class="electron-section">
+
+        <div class="section-title">
+            <strong>3D Electron Shell Illustration</strong>
+
+            <span
+                class="valence-badge"
+                id="valenceCount"
+            >
+                4 valence e⁻
+            </span>
+        </div>
+
+        <div
+            class="electron-diagram"
+            id="electronDiagram"
+        ></div>
+
+        <div
+            class="shell-info"
+            id="shellInfo"
+        ></div>
+        <div class="atom-education" id="atomEducation" aria-live="polite">
+            <div class="atom-education-title" id="atomEducationTitle">Illustrative model · Not to scale</div>
+            <p id="atomEducationText">This Bohr-style illustration shows how electrons are distributed among shells. The animated paths are visual aids only: electrons are described by quantum-mechanical orbitals, not fixed trajectories.</p>
+            <div class="atom-shell-summary" id="atomShellSummary"></div>
+        </div>
+
+    </div>
+
+
+    <div
+        class="description"
+        id="infoDescription"
+    >
+        Carbon is a nonmetal and is the basis of many important
+        compounds and forms of life.
+    </div>
+
+    <section class="encyclopedia" id="elementEncyclopedia" aria-label="Element encyclopedia"></section>
+
+    <button
+        class="back-btn"
+        id="backButton"
+    >
+        ↑ Back to periodic table
+    </button>
+
+</aside>
+
+</main>
+
+<footer class="science-footer" aria-label="Scientific accuracy and sources" id="scienceFooter">
+  <details>
+    <summary id="scienceFooterTitle">About &amp; Scientific Accuracy</summary>
+    <p id="scienceFooterDescription">Moonlit Japan is an educational reference. Its animated atomic model is a simplified illustration of electron-shell distribution, not a depiction of real electron trajectories. Scientific measurements may depend on conditions, and some properties—especially for short-lived synthetic elements—are predicted, uncertain, or not yet measured. Not every element profile has been individually verified; consult the linked scientific references before relying on specific values.</p>
+    <p class="science-footer-sources"><span id="scienceFooterSourcesLabel">Authoritative references:</span> <a href="https://iupac.org/what-we-do/periodic-table-of-elements/" target="_blank" rel="noopener noreferrer">IUPAC</a> · <a href="https://www.rsc.org/periodic-table" target="_blank" rel="noopener noreferrer">Royal Society of Chemistry</a> · <a href="https://physics.nist.gov/PhysRefData/ASD/" target="_blank" rel="noopener noreferrer">NIST</a></p>
+  </details>
+</footer>
+
+</div>
+
+
+<script>
+
+/* =========================================================
+   ELEMENT DATA
+========================================================= */
+
+const elements = [
+
+/* Period 1 */
+{
+    n:1,s:"H",name:"Hydrogen",mass:"1.008",
+    category:"nonmetal",period:1,group:1,
+    shells:[1]
+},
+{
+    n:2,s:"He",name:"Helium",mass:"4.003",
+    category:"noble",period:1,group:18,
+    shells:[2]
+},
+
+/* Period 2 */
+{
+    n:3,s:"Li",name:"Lithium",mass:"6.941",
+    category:"alkali",period:2,group:1,
+    shells:[2,1]
+},
+{
+    n:4,s:"Be",name:"Beryllium",mass:"9.012",
+    category:"alkaline",period:2,group:2,
+    shells:[2,2]
+},
+{
+    n:5,s:"B",name:"Boron",mass:"10.81",
+    category:"metalloid",period:2,group:13,
+    shells:[2,3]
+},
+{
+    n:6,s:"C",name:"Carbon",mass:"12.011",
+    category:"nonmetal",period:2,group:14,
+    shells:[2,4]
+},
+{
+    n:7,s:"N",name:"Nitrogen",mass:"14.007",
+    category:"nonmetal",period:2,group:15,
+    shells:[2,5]
+},
+{
+    n:8,s:"O",name:"Oxygen",mass:"15.999",
+    category:"nonmetal",period:2,group:16,
+    shells:[2,6]
+},
+{
+    n:9,s:"F",name:"Fluorine",mass:"18.998",
+    category:"halogen",period:2,group:17,
+    shells:[2,7]
+},
+{
+    n:10,s:"Ne",name:"Neon",mass:"20.180",
+    category:"noble",period:2,group:18,
+    shells:[2,8]
+},
+
+/* Period 3 */
+{
+    n:11,s:"Na",name:"Sodium",mass:"22.990",
+    category:"alkali",period:3,group:1,
+    shells:[2,8,1]
+},
+{
+    n:12,s:"Mg",name:"Magnesium",mass:"24.305",
+    category:"alkaline",period:3,group:2,
+    shells:[2,8,2]
+},
+{
+    n:13,s:"Al",name:"Aluminium",mass:"26.982",
+    category:"post-transition",period:3,group:13,
+    shells:[2,8,3]
+},
+{
+    n:14,s:"Si",name:"Silicon",mass:"28.085",
+    category:"metalloid",period:3,group:14,
+    shells:[2,8,4]
+},
+{
+    n:15,s:"P",name:"Phosphorus",mass:"30.974",
+    category:"nonmetal",period:3,group:15,
+    shells:[2,8,5]
+},
+{
+    n:16,s:"S",name:"Sulfur",mass:"32.06",
+    category:"nonmetal",period:3,group:16,
+    shells:[2,8,6]
+},
+{
+    n:17,s:"Cl",name:"Chlorine",mass:"35.45",
+    category:"halogen",period:3,group:17,
+    shells:[2,8,7]
+},
+{
+    n:18,s:"Ar",name:"Argon",mass:"39.948",
+    category:"noble",period:3,group:18,
+    shells:[2,8,8]
+},
+
+/* Period 4 */
+{
+    n:19,s:"K",name:"Potassium",mass:"39.098",
+    category:"alkali",period:4,group:1,
+    shells:[2,8,8,1]
+},
+{
+    n:20,s:"Ca",name:"Calcium",mass:"40.078",
+    category:"alkaline",period:4,group:2,
+    shells:[2,8,8,2]
+},
+{
+    n:21,s:"Sc",name:"Scandium",mass:"44.956",
+    category:"transition",period:4,group:3,
+    shells:[2,8,9,2]
+},
+{
+    n:22,s:"Ti",name:"Titanium",mass:"47.867",
+    category:"transition",period:4,group:4,
+    shells:[2,8,10,2]
+},
+{
+    n:23,s:"V",name:"Vanadium",mass:"50.942",
+    category:"transition",period:4,group:5,
+    shells:[2,8,11,2]
+},
+{
+    n:24,s:"Cr",name:"Chromium",mass:"51.996",
+    category:"transition",period:4,group:6,
+    shells:[2,8,13,1]
+},
+{
+    n:25,s:"Mn",name:"Manganese",mass:"54.938",
+    category:"transition",period:4,group:7,
+    shells:[2,8,13,2]
+},
+{
+    n:26,s:"Fe",name:"Iron",mass:"55.845",
+    category:"transition",period:4,group:8,
+    shells:[2,8,14,2]
+},
+{
+    n:27,s:"Co",name:"Cobalt",mass:"58.933",
+    category:"transition",period:4,group:9,
+    shells:[2,8,15,2]
+},
+{
+    n:28,s:"Ni",name:"Nickel",mass:"58.693",
+    category:"transition",period:4,group:10,
+    shells:[2,8,16,2]
+},
+{
+    n:29,s:"Cu",name:"Copper",mass:"63.546",
+    category:"transition",period:4,group:11,
+    shells:[2,8,18,1]
+},
+{
+    n:30,s:"Zn",name:"Zinc",mass:"65.38",
+    category:"transition",period:4,group:12,
+    shells:[2,8,18,2]
+},
+{
+    n:31,s:"Ga",name:"Gallium",mass:"69.723",
+    category:"post-transition",period:4,group:13,
+    shells:[2,8,18,3]
+},
+{
+    n:32,s:"Ge",name:"Germanium",mass:"72.630",
+    category:"metalloid",period:4,group:14,
+    shells:[2,8,18,4]
+},
+{
+    n:33,s:"As",name:"Arsenic",mass:"74.922",
+    category:"metalloid",period:4,group:15,
+    shells:[2,8,18,5]
+},
+{
+    n:34,s:"Se",name:"Selenium",mass:"78.971",
+    category:"nonmetal",period:4,group:16,
+    shells:[2,8,18,6]
+},
+{
+    n:35,s:"Br",name:"Bromine",mass:"79.904",
+    category:"halogen",period:4,group:17,
+    shells:[2,8,18,7]
+},
+{
+    n:36,s:"Kr",name:"Krypton",mass:"83.798",
+    category:"noble",period:4,group:18,
+    shells:[2,8,18,8]
+},
+
+/* Period 5 */
+{
+    n:37,s:"Rb",name:"Rubidium",mass:"85.468",
+    category:"alkali",period:5,group:1,
+    shells:[2,8,18,8,1]
+},
+{
+    n:38,s:"Sr",name:"Strontium",mass:"87.62",
+    category:"alkaline",period:5,group:2,
+    shells:[2,8,18,8,2]
+},
+{
+    n:39,s:"Y",name:"Yttrium",mass:"88.906",
+    category:"transition",period:5,group:3,
+    shells:[2,8,18,9,2]
+},
+{
+    n:40,s:"Zr",name:"Zirconium",mass:"91.224",
+    category:"transition",period:5,group:4,
+    shells:[2,8,18,10,2]
+},
+{
+    n:41,s:"Nb",name:"Niobium",mass:"92.906",
+    category:"transition",period:5,group:5,
+    shells:[2,8,18,12,1]
+},
+{
+    n:42,s:"Mo",name:"Molybdenum",mass:"95.95",
+    category:"transition",period:5,group:6,
+    shells:[2,8,18,13,1]
+},
+{
+    n:43,s:"Tc",name:"Technetium",mass:"98",
+    category:"transition",period:5,group:7,
+    shells:[2,8,18,13,2]
+},
+{
+    n:44,s:"Ru",name:"Ruthenium",mass:"101.07",
+    category:"transition",period:5,group:8,
+    shells:[2,8,18,15,1]
+},
+{
+    n:45,s:"Rh",name:"Rhodium",mass:"102.91",
+    category:"transition",period:5,group:9,
+    shells:[2,8,18,16,1]
+},
+{
+    n:46,s:"Pd",name:"Palladium",mass:"106.42",
+    category:"transition",period:5,group:10,
+    shells:[2,8,18,18]
+},
+{
+    n:47,s:"Ag",name:"Silver",mass:"107.87",
+    category:"transition",period:5,group:11,
+    shells:[2,8,18,18,1]
+},
+{
+    n:48,s:"Cd",name:"Cadmium",mass:"112.41",
+    category:"transition",period:5,group:12,
+    shells:[2,8,18,18,2]
+},
+{
+    n:49,s:"In",name:"Indium",mass:"114.82",
+    category:"post-transition",period:5,group:13,
+    shells:[2,8,18,18,3]
+},
+{
+    n:50,s:"Sn",name:"Tin",mass:"118.71",
+    category:"post-transition",period:5,group:14,
+    shells:[2,8,18,18,4]
+},
+{
+    n:51,s:"Sb",name:"Antimony",mass:"121.76",
+    category:"metalloid",period:5,group:15,
+    shells:[2,8,18,18,5]
+},
+{
+    n:52,s:"Te",name:"Tellurium",mass:"127.60",
+    category:"metalloid",period:5,group:16,
+    shells:[2,8,18,18,6]
+},
+{
+    n:53,s:"I",name:"Iodine",mass:"126.90",
+    category:"halogen",period:5,group:17,
+    shells:[2,8,18,18,7]
+},
+{
+    n:54,s:"Xe",name:"Xenon",mass:"131.29",
+    category:"noble",period:5,group:18,
+    shells:[2,8,18,18,8]
+},
+
+/* Period 6 */
+{
+    n:55,s:"Cs",name:"Caesium",mass:"132.91",
+    category:"alkali",period:6,group:1,
+    shells:[2,8,18,18,8,1]
+},
+{
+    n:56,s:"Ba",name:"Barium",mass:"137.33",
+    category:"alkaline",period:6,group:2,
+    shells:[2,8,18,18,8,2]
+},
+
+/* Lanthanides */
+{
+    n:57,s:"La",name:"Lanthanum",mass:"138.91",
+    category:"lanthanide",period:6,group:3,
+    shells:[2,8,18,18,9,2]
+},
+{
+    n:58,s:"Ce",name:"Cerium",mass:"140.12",
+    category:"lanthanide",period:6,group:4,
+    shells:[2,8,18,19,9,2]
+},
+{
+    n:59,s:"Pr",name:"Praseodymium",mass:"140.91",
+    category:"lanthanide",period:6,group:5,
+    shells:[2,8,18,21,8,2]
+},
+{
+    n:60,s:"Nd",name:"Neodymium",mass:"144.24",
+    category:"lanthanide",period:6,group:6,
+    shells:[2,8,18,22,8,2]
+},
+{
+    n:61,s:"Pm",name:"Promethium",mass:"145",
+    category:"lanthanide",period:6,group:7,
+    shells:[2,8,18,23,8,2]
+},
+{
+    n:62,s:"Sm",name:"Samarium",mass:"150.36",
+    category:"lanthanide",period:6,group:8,
+    shells:[2,8,18,24,8,2]
+},
+{
+    n:63,s:"Eu",name:"Europium",mass:"151.96",
+    category:"lanthanide",period:6,group:9,
+    shells:[2,8,18,25,8,2]
+},
+{
+    n:64,s:"Gd",name:"Gadolinium",mass:"157.25",
+    category:"lanthanide",period:6,group:10,
+    shells:[2,8,18,25,9,2]
+},
+{
+    n:65,s:"Tb",name:"Terbium",mass:"158.93",
+    category:"lanthanide",period:6,group:11,
+    shells:[2,8,18,27,8,2]
+},
+{
+    n:66,s:"Dy",name:"Dysprosium",mass:"162.50",
+    category:"lanthanide",period:6,group:12,
+    shells:[2,8,18,28,8,2]
+},
+{
+    n:67,s:"Ho",name:"Holmium",mass:"164.93",
+    category:"lanthanide",period:6,group:13,
+    shells:[2,8,18,29,8,2]
+},
+{
+    n:68,s:"Er",name:"Erbium",mass:"167.26",
+    category:"lanthanide",period:6,group:14,
+    shells:[2,8,18,30,8,2]
+},
+{
+    n:69,s:"Tm",name:"Thulium",mass:"168.93",
+    category:"lanthanide",period:6,group:15,
+    shells:[2,8,18,31,8,2]
+},
+{
+    n:70,s:"Yb",name:"Ytterbium",mass:"173.05",
+    category:"lanthanide",period:6,group:16,
+    shells:[2,8,18,32,8,2]
+},
+{
+    n:71,s:"Lu",name:"Lutetium",mass:"174.97",
+    category:"lanthanide",period:6,group:17,
+    shells:[2,8,18,32,9,2]
+},
+
+/* Remaining Period 6 */
+{
+    n:72,s:"Hf",name:"Hafnium",mass:"178.49",
+    category:"transition",period:6,group:4,
+    shells:[2,8,18,32,10,2]
+},
+{
+    n:73,s:"Ta",name:"Tantalum",mass:"180.95",
+    category:"transition",period:6,group:5,
+    shells:[2,8,18,32,11,2]
+},
+{
+    n:74,s:"W",name:"Tungsten",mass:"183.84",
+    category:"transition",period:6,group:6,
+    shells:[2,8,18,32,12,2]
+},
+{
+    n:75,s:"Re",name:"Rhenium",mass:"186.21",
+    category:"transition",period:6,group:7,
+    shells:[2,8,18,32,13,2]
+},
+{
+    n:76,s:"Os",name:"Osmium",mass:"190.23",
+    category:"transition",period:6,group:8,
+    shells:[2,8,18,32,14,2]
+},
+{
+    n:77,s:"Ir",name:"Iridium",mass:"192.22",
+    category:"transition",period:6,group:9,
+    shells:[2,8,18,32,15,2]
+},
+{
+    n:78,s:"Pt",name:"Platinum",mass:"195.08",
+    category:"transition",period:6,group:10,
+    shells:[2,8,18,32,17,1]
+},
+{
+    n:79,s:"Au",name:"Gold",mass:"196.97",
+    category:"transition",period:6,group:11,
+    shells:[2,8,18,32,18,1]
+},
+{
+    n:80,s:"Hg",name:"Mercury",mass:"200.59",
+    category:"transition",period:6,group:12,
+    shells:[2,8,18,32,18,2]
+},
+{
+    n:81,s:"Tl",name:"Thallium",mass:"204.38",
+    category:"post-transition",period:6,group:13,
+    shells:[2,8,18,32,18,3]
+},
+{
+    n:82,s:"Pb",name:"Lead",mass:"207.2",
+    category:"post-transition",period:6,group:14,
+    shells:[2,8,18,32,18,4]
+},
+{
+    n:83,s:"Bi",name:"Bismuth",mass:"208.98",
+    category:"post-transition",period:6,group:15,
+    shells:[2,8,18,32,18,5]
+},
+{
+    n:84,s:"Po",name:"Polonium",mass:"209",
+    category:"post-transition",period:6,group:16,
+    shells:[2,8,18,32,18,6]
+},
+{
+    n:85,s:"At",name:"Astatine",mass:"210",
+    category:"halogen",period:6,group:17,
+    shells:[2,8,18,32,18,7]
+},
+{
+    n:86,s:"Rn",name:"Radon",mass:"222",
+    category:"noble",period:6,group:18,
+    shells:[2,8,18,32,18,8]
+},
+
+/* Period 7 */
+{
+    n:87,s:"Fr",name:"Francium",mass:"223",
+    category:"alkali",period:7,group:1,
+    shells:[2,8,18,32,18,8,1]
+},
+{
+    n:88,s:"Ra",name:"Radium",mass:"226",
+    category:"alkaline",period:7,group:2,
+    shells:[2,8,18,32,18,8,2]
+},
+
+/* Actinides */
+{
+    n:89,s:"Ac",name:"Actinium",mass:"227",
+    category:"actinide",period:7,group:3,
+    shells:[2,8,18,32,18,9,2]
+},
+{
+    n:90,s:"Th",name:"Thorium",mass:"232.04",
+    category:"actinide",period:7,group:4,
+    shells:[2,8,18,32,18,10,2]
+},
+{
+    n:91,s:"Pa",name:"Protactinium",mass:"231.04",
+    category:"actinide",period:7,group:5,
+    shells:[2,8,18,32,20,9,2]
+},
+{
+    n:92,s:"U",name:"Uranium",mass:"238.03",
+    category:"actinide",period:7,group:6,
+    shells:[2,8,18,32,21,9,2]
+},
+{
+    n:93,s:"Np",name:"Neptunium",mass:"237",
+    category:"actinide",period:7,group:7,
+    shells:[2,8,18,32,22,9,2]
+},
+{
+    n:94,s:"Pu",name:"Plutonium",mass:"244",
+    category:"actinide",period:7,group:8,
+    shells:[2,8,18,32,24,8,2]
+},
+{
+    n:95,s:"Am",name:"Americium",mass:"243",
+    category:"actinide",period:7,group:9,
+    shells:[2,8,18,32,25,8,2]
+},
+{
+    n:96,s:"Cm",name:"Curium",mass:"247",
+    category:"actinide",period:7,group:10,
+    shells:[2,8,18,32,25,9,2]
+},
+{
+    n:97,s:"Bk",name:"Berkelium",mass:"247",
+    category:"actinide",period:7,group:11,
+    shells:[2,8,18,32,27,8,2]
+},
+{
+    n:98,s:"Cf",name:"Californium",mass:"251",
+    category:"actinide",period:7,group:12,
+    shells:[2,8,18,32,28,8,2]
+},
+{
+    n:99,s:"Es",name:"Einsteinium",mass:"252",
+    category:"actinide",period:7,group:13,
+    shells:[2,8,18,32,29,8,2]
+},
+{
+    n:100,s:"Fm",name:"Fermium",mass:"257",
+    category:"actinide",period:7,group:14,
+    shells:[2,8,18,32,30,8,2]
+},
+{
+    n:101,s:"Md",name:"Mendelevium",mass:"258",
+    category:"actinide",period:7,group:15,
+    shells:[2,8,18,32,31,8,2]
+},
+{
+    n:102,s:"No",name:"Nobelium",mass:"259",
+    category:"actinide",period:7,group:16,
+    shells:[2,8,18,32,32,8,2]
+},
+{
+    n:103,s:"Lr",name:"Lawrencium",mass:"266",
+    category:"actinide",period:7,group:17,
+    shells:[2,8,18,32,32,8,3]
+},
+
+/* Remaining Period 7 */
+{
+    n:104,s:"Rf",name:"Rutherfordium",mass:"267",
+    category:"transition",period:7,group:4,
+    shells:[2,8,18,32,32,10,2]
+},
+{
+    n:105,s:"Db",name:"Dubnium",mass:"268",
+    category:"transition",period:7,group:5,
+    shells:[2,8,18,32,32,11,2]
+},
+{
+    n:106,s:"Sg",name:"Seaborgium",mass:"269",
+    category:"transition",period:7,group:6,
+    shells:[2,8,18,32,32,12,2]
+},
+{
+    n:107,s:"Bh",name:"Bohrium",mass:"270",
+    category:"transition",period:7,group:7,
+    shells:[2,8,18,32,32,13,2]
+},
+{
+    n:108,s:"Hs",name:"Hassium",mass:"277",
+    category:"transition",period:7,group:8,
+    shells:[2,8,18,32,32,14,2]
+},
+{
+    n:109,s:"Mt",name:"Meitnerium",mass:"278",
+    category:"transition",period:7,group:9,
+    shells:[2,8,18,32,32,15,2]
+},
+{
+    n:110,s:"Ds",name:"Darmstadtium",mass:"281",
+    category:"transition",period:7,group:10,
+    shells:[2,8,18,32,32,17,1]
+},
+{
+    n:111,s:"Rg",name:"Roentgenium",mass:"282",
+    category:"transition",period:7,group:11,
+    shells:[2,8,18,32,32,18,1]
+},
+{
+    n:112,s:"Cn",name:"Copernicium",mass:"285",
+    category:"transition",period:7,group:12,
+    shells:[2,8,18,32,32,18,2]
+},
+{
+    n:113,s:"Nh",name:"Nihonium",mass:"286",
+    category:"post-transition",period:7,group:13,
+    shells:[2,8,18,32,32,18,3]
+},
+{
+    n:114,s:"Fl",name:"Flerovium",mass:"289",
+    category:"post-transition",period:7,group:14,
+    shells:[2,8,18,32,32,18,4]
+},
+{
+    n:115,s:"Mc",name:"Moscovium",mass:"290",
+    category:"post-transition",period:7,group:15,
+    shells:[2,8,18,32,32,18,5]
+},
+{
+    n:116,s:"Lv",name:"Livermorium",mass:"293",
+    category:"post-transition",period:7,group:16,
+    shells:[2,8,18,32,32,18,6]
+},
+{
+    n:117,s:"Ts",name:"Tennessine",mass:"294",
+    category:"halogen",period:7,group:17,
+    shells:[2,8,18,32,32,18,7]
+},
+{
+    n:118,s:"Og",name:"Oganesson",mass:"294",
+    category:"noble",period:7,group:18,
+    shells:[2,8,18,32,32,18,8]
+}
+
+];
+
+
+/* =========================================================
+   DESCRIPTION GENERATOR
+========================================================= */
+
+/* Bilingual EN/VI interface; original element data and artwork remain unchanged. */
+const vietnameseElementNames = ["Hiđro", "Heli", "Liti", "Beri", "Bo", "Cacbon", "Nitơ", "Oxi", "Flo", "Neon", "Natri", "Magie", "Nhôm", "Silic", "Photpho", "Lưu huỳnh", "Clo", "Argon", "Kali", "Canxi", "Scandi", "Titan", "Vanadi", "Crom", "Mangan", "Sắt", "Coban", "Niken", "Đồng", "Kẽm", "Gali", "Gecmani", "Asen", "Selen", "Brom", "Krypton", "Rubidi", "Stronti", "Ytri", "Zirconi", "Niobi", "Molypden", "Tecneti", "Ruteni", "Rodi", "Paladi", "Bạc", "Cadimi", "Indi", "Thiếc", "Antimon", "Telua", "Iot", "Xenon", "Xesi", "Bari", "Lantan", "Xeri", "Praseodymi", "Neodymi", "Promethi", "Samari", "Europi", "Gadolini", "Terbi", "Dysprosi", "Holmi", "Erbi", "Tuli", "Yterbi", "Luteti", "Hafni", "Tantan", "Vonfram", "Rheni", "Osmi", "Iridi", "Platin", "Vàng", "Thủy ngân", "Tali", "Chì", "Bitmut", "Poloni", "Astatin", "Radon", "Franci", "Radi", "Actini", "Thori", "Protactini", "Urani", "Neptuni", "Plutoni", "Americi", "Curi", "Berkeli", "Californi", "Einsteini", "Fermi", "Mendelevi", "Nobeli", "Lawrenci", "Rutherfordi", "Dubni", "Seaborgi", "Bohri", "Hassi", "Meitneri", "Darmstadti", "Roentgeni", "Copernici", "Nihoni", "Flerovi", "Moscovi", "Livermori", "Tennessine", "Oganesson"];
+let currentLanguage = 'en';
+let selectedElement = null;
+const interfaceTranslations = {"Periodic Table of the Elements": "Bảng tuần hoàn các nguyên tố hóa học", "Explore the elements and their electron structures.": "Khám phá các nguyên tố và cấu trúc electron của chúng.", "Clear": "Xóa", "All": "Tất cả", "Alkali metals": "Kim loại kiềm", "Alkaline earth": "Kim loại kiềm thổ", "Transition metals": "Kim loại chuyển tiếp", "Post-transition": "Kim loại sau chuyển tiếp", "Metalloids": "Á kim", "Nonmetals": "Phi kim", "Halogens": "Halogen", "Noble gases": "Khí hiếm", "Lanthanides": "Họ Lantan", "Actinides": "Họ Actini", "Selected element": "Nguyên tố đã chọn", "Atomic number": "Số hiệu nguyên tử", "Atomic mass": "Nguyên tử khối", "Period": "Chu kì", "Group": "Nhóm", "Electron shells": "Các lớp electron", "Valence electrons": "Electron hóa trị", "Electron configuration": "Cấu hình electron", "Full configuration": "Cấu hình đầy đủ", "Noble-gas shorthand": "Cấu hình rút gọn", "Electron structure": "Cấu trúc electron", "Copy": "Sao chép", "↑ Back to periodic table": "↑ Quay lại bảng tuần hoàn"};
+const categoryTranslations = {"alkali": "Kim loại kiềm", "alkaline": "Kim loại kiềm thổ", "transition": "Kim loại chuyển tiếp", "post-transition": "Kim loại sau chuyển tiếp", "metalloid": "Á kim", "nonmetal": "Phi kim", "halogen": "Halogen", "noble": "Khí hiếm", "lanthanide": "Họ Lantan", "actinide": "Họ Actini"};
+function viName(element) { return vietnameseElementNames[element.n - 1] || element.name; }
+function displayName(element) { return element.name; } // Element names always remain in English.
+
+// Vietnamese textbook A/B group notation; English uses IUPAC groups 1–18.
+const traditionalGroupLabels = {
+    1:'IA', 2:'IIA', 3:'IIIB', 4:'IVB', 5:'VB', 6:'VIB',
+    7:'VIIB', 8:'VIIIB', 9:'VIIIB', 10:'VIIIB', 11:'IB', 12:'IIB',
+    13:'IIIA', 14:'IVA', 15:'VA', 16:'VIA', 17:'VIIA', 18:'VIIIA'
+};
+function displayGroup(element) {
+    if (currentLanguage !== 'vi') return element.group || '—';
+    // The f-block series does not have an individual A/B group assignment.
+    if ((element.category === 'lanthanide' || element.category === 'actinide') &&
+        element.n !== 57 && element.n !== 89) return '—';
+    return traditionalGroupLabels[element.group] || '—';
+}
+
+function categoryLabel(category) { return currentLanguage === 'vi' ? categoryTranslations[category] : category.replace('-', ' ').replace(/\b\w/g, c => c.toUpperCase()); }
+function translateStaticUI() {
+    const viDisclaimer = currentLanguage === 'vi';
+    document.getElementById('scienceFooterTitle').textContent = viDisclaimer ? 'Giới thiệu & Độ chính xác khoa học' : 'About & Scientific Accuracy';
+    document.getElementById('scienceFooterDescription').textContent = viDisclaimer
+      ? 'Moonlit Japan là tài liệu tham khảo phục vụ học tập. Mô hình nguyên tử chuyển động chỉ minh họa sự phân bố electron theo lớp, không mô tả quỹ đạo chuyển động thực tế của electron. Các giá trị khoa học có thể phụ thuộc vào điều kiện đo; một số tính chất, đặc biệt ở các nguyên tố tổng hợp tồn tại rất ngắn, chỉ là dự đoán, chưa chắc chắn hoặc chưa được đo. Không phải hồ sơ của mọi nguyên tố đều đã được kiểm chứng riêng; hãy tham khảo các nguồn khoa học được dẫn liên kết trước khi sử dụng số liệu cụ thể.'
+      : 'Moonlit Japan is an educational reference. Its animated atomic model is a simplified illustration of electron-shell distribution, not a depiction of real electron trajectories. Scientific measurements may depend on conditions, and some properties—especially for short-lived synthetic elements—are predicted, uncertain, or not yet measured. Not every element profile has been individually verified; consult the linked scientific references before relying on specific values.';
+    document.getElementById('scienceFooterSourcesLabel').textContent = viDisclaimer ? 'Nguồn tham khảo khoa học:' : 'Authoritative references:';
+    document.documentElement.lang = currentLanguage;
+    document.title = currentLanguage === 'vi' ? 'Bảng tuần hoàn các nguyên tố hóa học' : 'Interactive Periodic Table';
+    document.querySelectorAll('[data-original-text]').forEach(node => {
+        node.textContent = currentLanguage === 'vi' ? (interfaceTranslations[node.dataset.originalText] || node.dataset.originalText) : node.dataset.originalText;
+    });
+    document.getElementById('searchInput').placeholder = currentLanguage === 'vi'
+      ? 'Tìm theo tên nguyên tố, kí hiệu hoặc số hiệu nguyên tử...'
+      : 'Search element name, symbol, or atomic number...';
+    document.querySelectorAll('[data-copy-config]').forEach(button => { button.textContent = currentLanguage === 'vi' ? 'Sao chép' : 'Copy'; });
+    document.getElementById('langEN').classList.toggle('active', currentLanguage === 'en');
+    document.getElementById('langVI').classList.toggle('active', currentLanguage === 'vi');
+    document.getElementById('langEN').setAttribute('aria-pressed', String(currentLanguage === 'en'));
+    document.getElementById('langVI').setAttribute('aria-pressed', String(currentLanguage === 'vi'));
+}
+function setLanguage(language) {
+    currentLanguage = language;
+    try { localStorage.setItem('periodic-table-language', language); } catch (e) {}
+    translateStaticUI();
+    updateCategoryExplanation();
+    updatePanelLanguage();
+    buildTable();
+    if (selectedElement) selectElement(selectedElement, false);
+    performSearch();
+    const activeCategory = document.querySelector('.legend button.active')?.dataset.category || 'all';
+    if (activeCategory !== 'all') document.querySelectorAll('.element').forEach(card => {
+        if (card.dataset.category !== activeCategory) card.classList.add('dimmed');
+    });
+}
+
+function getDescription(element) {
+
+    const descriptions = {
+
+        alkali:
+            `${element.name} is an alkali metal. Alkali metals are highly reactive and typically have one electron in their outermost shell.`,
+
+        alkaline:
+            `${element.name} is an alkaline earth metal. These elements generally have two electrons in their outermost shell.`,
+
+        transition:
+            `${element.name} is a transition metal. Transition metals commonly have partially filled d subshells and can form multiple oxidation states.`,
+
+        "post-transition":
+            `${element.name} is a post-transition metal. These elements are generally metallic but have properties that distinguish them from transition metals.`,
+
+        metalloid:
+            `${element.name} is a metalloid, showing a mixture of metallic and nonmetallic properties.`,
+
+        nonmetal:
+            `${element.name} is a nonmetal. Its outer electrons play an important role in determining how it bonds with other elements.`,
+
+        halogen:
+            `${element.name} is a halogen. Halogens generally have seven electrons in their outermost shell and tend to gain one electron.`,
+
+        noble:
+            `${element.name} is a noble gas. Its outermost electron shell is filled, giving it relatively low chemical reactivity.`,
+
+        lanthanide:
+            `${element.name} belongs to the lanthanide series, a group of metallic elements associated with the f-block.`,
+
+        actinide:
+            `${element.name} belongs to the actinide series. Many actinides are radioactive and have partially filled f subshells.`
+    };
+
+    if (currentLanguage === 'vi') {
+        const descriptionsVI = {
+            alkali: `${element.name} là kim loại kiềm. Các kim loại kiềm có tính phản ứng cao và thường có một electron ở lớp ngoài cùng.`,
+            alkaline: `${element.name} là kim loại kiềm thổ. Các nguyên tố này thường có hai electron ở lớp ngoài cùng.`,
+            transition: `${element.name} thuộc nhóm kim loại chuyển tiếp. Nhiều kim loại chuyển tiếp có phân lớp d chưa bão hòa và có thể có nhiều số oxi hóa.`,
+            'post-transition': `${element.name} là kim loại sau chuyển tiếp, có những tính chất khác với kim loại chuyển tiếp.`,
+            metalloid: `${element.name} là á kim, thể hiện cả tính chất kim loại và phi kim.`,
+            nonmetal: `${element.name} là phi kim. Các electron lớp ngoài cùng ảnh hưởng lớn đến khả năng tạo liên kết hóa học.`,
+            halogen: `${element.name} thuộc nhóm halogen. Các halogen thường có bảy electron lớp ngoài cùng và có xu hướng nhận thêm một electron.`,
+            noble: `${element.name} thuộc nhóm khí hiếm. Lớp electron ngoài cùng đã được điền đầy theo mô hình thông thường, nên nhóm này nhìn chung ít phản ứng.`,
+            lanthanide: `${element.name} thuộc họ Lantan, một dãy nguyên tố kim loại liên quan đến khối f.`,
+            actinide: `${element.name} thuộc họ Actini. Nhiều nguyên tố trong họ này có tính phóng xạ và có phân lớp f chưa bão hòa.`
+        };
+        return descriptionsVI[element.category] || '';
+    }
+    return descriptions[element.category] || "";
+}
+
+
+/* =========================================================
+   DOM ELEMENTS
+========================================================= */
+
+const table = document.getElementById("periodicTable");
+const infoPanel = document.getElementById("infoPanel");
+
+const infoSymbol = document.getElementById("infoSymbol");
+const infoName = document.getElementById("infoName");
+const infoCategory = document.getElementById("infoCategory");
+const infoNumber = document.getElementById("infoNumber");
+const infoMass = document.getElementById("infoMass");
+const infoPeriod = document.getElementById("infoPeriod");
+const infoGroup = document.getElementById("infoGroup");
+const infoShells = document.getElementById("infoShells");
+const infoValence = document.getElementById("infoValence");
+const infoDescription = document.getElementById("infoDescription");
+
+const electronDiagram =
+    document.getElementById("electronDiagram");
+
+const shellInfo =
+    document.getElementById("shellInfo");
+
+const valenceCount =
+    document.getElementById("valenceCount");
+
+const searchInput =
+    document.getElementById("searchInput");
+
+const clearSearch =
+    document.getElementById("clearSearch");
+
+const backButton =
+    document.getElementById("backButton");
+
+
+/* =========================================================
+   POSITION ELEMENTS
+========================================================= */
+
+function getPosition(element) {
+
+    /*
+       Main periodic table.
+
+       Periods 1–5 are straightforward.
+       Periods 6–7 have the f-block separated below,
+       so we intentionally leave the central spaces.
+    */
+
+    if (element.period <= 5) {
+        return {
+            row: element.period,
+            col: element.group
+        };
+    }
+
+    if (element.period === 6) {
+
+        if (element.n === 57) {
+            return { row: 6, col: 3 };
+        }
+
+        if (element.n >= 58 && element.n <= 71) {
+            return null;
+        }
+
+        if (element.n >= 72) {
+            return {
+                row: 6,
+                col: element.group
+            };
+        }
+
+        return {
+            row: 6,
+            col: element.group
+        };
+    }
+
+    if (element.period === 7) {
+
+        if (element.n === 89) {
+            return { row: 7, col: 3 };
+        }
+
+        if (element.n >= 90 && element.n <= 103) {
+            return null;
+        }
+
+        if (element.n >= 104) {
+            return {
+                row: 7,
+                col: element.group
+            };
+        }
+
+        return {
+            row: 7,
+            col: element.group
+        };
+    }
+
+    return null;
+}
+
+
+/* =========================================================
+   CREATE ELEMENT CARD
+========================================================= */
+
+function createElementCard(element, allowUnpositioned = false) {
+
+    const button = document.createElement("button");
+
+    button.type = "button";
+
+    button.className =
+        `element ${element.category}`;
+
+    const position = getPosition(element);
+
+    if (!position && !allowUnpositioned) {
+        return null;
+    }
+
+    if (position) {
+        button.style.gridRow = position.row;
+        button.style.gridColumn = position.col;
+    }
+
+    button.style.setProperty("--element-landscape", elementLandscape(element));
+
+    button.dataset.number = element.n;
+    button.dataset.name = element.name.toLowerCase();
+    button.dataset.viName = viName(element).toLocaleLowerCase("vi");
+    button.dataset.symbol = element.s.toLowerCase();
+    button.dataset.category = element.category;
+
+    button.innerHTML = `
+        <div class="element-number">
+            ${element.n}
+        </div>
+
+        <div class="element-symbol">
+            ${element.s}
+        </div>
+
+        <div class="element-name">
+            ${displayName(element)}
+        </div>
+
+        <div class="element-mass">
+            ${element.mass}
+        </div>
+    `;
+
+    button.addEventListener("click", () => {
+        selectElement(element);
+    });
+
+    return button;
+}
+
+
+/* =========================================================
+   BUILD PERIODIC TABLE
+========================================================= */
+
+function buildTable() {
+
+    table.innerHTML = "";
+
+    elements.forEach(element => {
+
+        const card =
+            createElementCard(element);
+
+        if (card) {
+            table.appendChild(card);
+        }
+    });
+
+
+    /*
+       Add f-block labels.
+    */
+
+    const lanthanideLabel =
+        document.createElement("div");
+
+    lanthanideLabel.className = "f-label lanthanide-series";
+    lanthanideLabel.style.gridRow = "8";
+    lanthanideLabel.style.gridColumn = "1 / span 2";
+    lanthanideLabel.textContent = currentLanguage === "vi" ? "Họ Lantan" : "Lanthanides";
+
+    table.appendChild(lanthanideLabel);
+
+
+    const actinideLabel =
+        document.createElement("div");
+
+    actinideLabel.className = "f-label actinide-series";
+    actinideLabel.style.gridRow = "9";
+    actinideLabel.style.gridColumn = "1 / span 2";
+    actinideLabel.textContent = currentLanguage === "vi" ? "Họ Actini" : "Actinides";
+
+    table.appendChild(actinideLabel);
+
+
+    /*
+       Add lanthanides.
+    */
+
+    elements
+        .filter(e => e.n >= 58 && e.n <= 71)
+        .forEach((element, index) => {
+
+            const card =
+                createElementCard(element, true);
+
+            if (!card) return;
+
+            card.style.gridRow = "8";
+            card.style.gridColumn =
+                `${index + 3}`;
+
+            table.appendChild(card);
+        });
+
+
+    /*
+       Add actinides.
+    */
+
+    elements
+        .filter(e => e.n >= 90 && e.n <= 103)
+        .forEach((element, index) => {
+
+            const card =
+                createElementCard(element, true);
+
+            if (!card) return;
+
+            card.style.gridRow = "9";
+            card.style.gridColumn =
+                `${index + 3}`;
+
+            table.appendChild(card);
+        });
+}
+
+
+/* =========================================================
+   ELECTRON DIAGRAM
+========================================================= */
+
+/* Interactive perspective-projected 3D Bohr-style visualization.
+   Self-contained Canvas renderer: no external scripts or CDN required. */
+let atom3DController = null;
+function createElectronDiagram(element) {
+    if (atom3DController) atom3DController.dispose();
+    electronDiagram.replaceChildren();
+    shellInfo.replaceChildren();
+    const shells = element.shells;
+    const vi = currentLanguage === 'vi';
+    document.querySelector('.electron-section .section-title strong').textContent = vi ? 'Minh họa 3D các lớp electron' : '3D Electron Shell Illustration';
+    document.getElementById('atomEducationTitle').textContent = vi ? 'Mô hình minh họa · Không theo tỉ lệ thực' : 'Illustrative model · Not to scale';
+    document.getElementById('atomEducationText').textContent = vi
+        ? 'Mô hình kiểu Bohr này minh họa sự phân bố electron theo các lớp. Các đường chuyển động chỉ giúp trực quan hóa; electron thực tế được mô tả bằng orbital theo cơ học lượng tử, không phải quỹ đạo cố định.'
+        : 'This Bohr-style illustration shows how electrons are distributed among shells. The animated paths are visual aids only: electrons are described by quantum-mechanical orbitals, not fixed trajectories.';
+    document.getElementById('atomShellSummary').textContent = (vi ? 'Phân bố electron theo lớp: ' : 'Electrons per shell: ') + shells.join(' · ');
+    const outermost = shells.length - 1;
+    valenceCount.textContent = `${shells[outermost]} ${currentLanguage === "vi" ? "e⁻ hóa trị" : "valence e⁻"}`;
+    shells.forEach((count, index) => {
+        const label = document.createElement('div');
+        label.className = 'shell-count' + (index === outermost ? ' outer' : '');
+        label.textContent = `${currentLanguage === 'vi' ? 'Lớp' : 'Shell'} ${index+1}: ${count} e⁻` +
+            (index === outermost ? (currentLanguage === 'vi' ? ' • NGOÀI CÙNG' : ' • OUTERMOST') : '');
+        shellInfo.appendChild(label);
+    });
+    const canvas = document.createElement('canvas');
+    canvas.className = 'atom-3d-canvas';
+    canvas.setAttribute('role','img');
+    canvas.setAttribute('aria-label', `${element.name}: interactive three-dimensional Bohr-style model, ${shells.join(', ')} electrons by shell`);
+    canvas.tabIndex = 0;
+    electronDiagram.appendChild(canvas);
+    const hint = document.createElement('div');
+    hint.className = 'atom-3d-hint';
+    hint.textContent = currentLanguage === 'vi' ? 'Kéo để xoay · Cuộn để thu phóng · Nhấp đúp để đặt lại' : 'Drag to rotate · Scroll to zoom · Double-click to reset';
+    electronDiagram.appendChild(hint);
+    const controls = document.createElement('div');
+    controls.className = 'atom-controls';
+    const pauseButton = document.createElement('button');
+    pauseButton.type = 'button';
+    pauseButton.className = 'atom-pause';
+    let paused = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const updatePauseLabel = () => {
+        pauseButton.textContent = paused ? (currentLanguage === 'vi' ? '▶ Phát' : '▶ Play') : (currentLanguage === 'vi' ? 'Ⅱ Tạm dừng' : 'Ⅱ Pause');
+        pauseButton.setAttribute('aria-pressed', String(paused));
+    };
+    updatePauseLabel();
+    pauseButton.addEventListener('click', () => { paused = !paused; updatePauseLabel(); });
+    controls.appendChild(pauseButton);
+    electronDiagram.appendChild(controls);
+    const ctx = canvas.getContext('2d');
+    if (!ctx) { hint.textContent = '3D canvas unavailable'; return; }
+    const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    let yaw = -.38, pitch = -.27, zoom = 1, phase = 0, raf = 0, disposed = false;
+    let dragging = false, lastX = 0, lastY = 0, lastTime = 0;
+    const clamp = (v,a,b) => Math.max(a,Math.min(b,v));
+    function resize() {
+        const r = canvas.getBoundingClientRect();
+        const size = Math.max(100, Math.round(r.width || 320));
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.round(size*dpr); canvas.height = Math.round(size*dpr);
+        ctx.setTransform(dpr,0,0,dpr,0,0);
+        draw();
+    }
+    function project(x,y,z,size) {
+        const cy=Math.cos(yaw), sy=Math.sin(yaw), cp=Math.cos(pitch), sp=Math.sin(pitch);
+        const xx=x*cy-z*sy, zz=x*sy+z*cy;
+        const yy=y*cp-zz*sp, depth=y*sp+zz*cp;
+        const perspective=3.8/(3.8-depth*.55);
+        return {x:size/2+xx*size*.34*zoom*perspective,
+                y:size/2+yy*size*.34*zoom*perspective,
+                depth, scale:perspective};
+    }
+    function draw() {
+        if(disposed) return;
+        const size=canvas.clientWidth||320;
+        ctx.clearRect(0,0,size,size);
+        const bg=ctx.createRadialGradient(size*.5,size*.48,4,size*.5,size*.5,size*.53);
+        bg.addColorStop(0,'rgba(40,64,92,.38)'); bg.addColorStop(1,'rgba(5,12,25,.06)');
+        ctx.fillStyle=bg;ctx.fillRect(0,0,size,size);
+        const objects=[];
+        shells.forEach((count,k)=>{
+            const radius=.24+k*(.71/Math.max(1,shells.length-1));
+            const tilt=.48+k*.31, spin=k*1.31;
+            function point(t) {
+                const x=radius*Math.cos(t), y=radius*Math.sin(t);
+                return project(x*Math.cos(spin)-y*Math.sin(spin)*Math.cos(tilt),
+                    y*Math.sin(tilt), x*Math.sin(spin)+y*Math.cos(spin)*Math.cos(tilt),size);
+            }
+            // Split orbit into depth-sorted segments, so front electrons obscure back lines.
+            for(let j=0;j<100;j++) {
+                const p=point(j*Math.PI*2/100),q=point((j+1)*Math.PI*2/100);
+                objects.push({kind:'line',depth:(p.depth+q.depth)/2,p,q,outer:k===outermost});
+            }
+            for(let j=0;j<count;j++) {
+                const t=j*2*Math.PI/count + phase*(.48/(1+k*.55))*(k%2?-1:1);
+                objects.push({kind:'electron',depth:point(t).depth,p:point(t),outer:k===outermost});
+            }
+        });
+        objects.push({kind:'nucleus',depth:0});
+        objects.sort((a,b)=>a.depth-b.depth);
+        for(const item of objects) {
+            if(item.kind==='line') {
+                ctx.strokeStyle=item.outer?'rgba(223,178,255,.52)':'rgba(148,195,225,.32)';
+                ctx.lineWidth=item.outer?1.35:1.05;
+                ctx.beginPath();ctx.moveTo(item.p.x,item.p.y);ctx.lineTo(item.q.x,item.q.y);ctx.stroke();
+            } else if(item.kind==='electron') {
+                const r=clamp((item.outer?4.1:3.1)*item.p.scale*zoom,1.8,6.2);
+                ctx.shadowColor=item.outer?'#dc9fff':'#8edaff';ctx.shadowBlur=item.outer?15:10;
+                ctx.fillStyle=item.outer?'#f3d1ff':'#b6eaff';ctx.beginPath();
+                ctx.arc(item.p.x,item.p.y,r,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+            } else {
+                const x=size/2,y=size/2,r=clamp(size*.073*zoom,13,28);
+                const glow=ctx.createRadialGradient(x-r*.25,y-r*.3,1,x,y,r*1.8);
+                glow.addColorStop(0,'#fff4c8');glow.addColorStop(.42,'#dfad73');glow.addColorStop(1,'rgba(130,63,76,0)');
+                ctx.fillStyle=glow;ctx.beginPath();ctx.arc(x,y,r*1.8,0,Math.PI*2);ctx.fill();
+                ctx.fillStyle='#21182c';ctx.strokeStyle='#f0c68c';ctx.lineWidth=1.6;
+                ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();ctx.stroke();
+                ctx.fillStyle='#fff0d2';ctx.textAlign='center';ctx.textBaseline='middle';
+                ctx.font=`bold ${Math.max(11,Math.min(17,r*.8))}px Georgia,serif`;
+                ctx.fillText(element.s,x,y-3);
+                ctx.font=`${Math.max(8,Math.min(10,r*.43))}px sans-serif`;
+                ctx.fillText('Z='+element.n,x,y+r*.47);
+            }
+        }
+    }
+    function frame(now) {
+        if(disposed) return;
+        if(!paused && !document.hidden) {
+            phase+=Math.min((now-(lastTime||now))/1000,.05);
+            draw();
+        }
+        lastTime=now;raf=requestAnimationFrame(frame);
+    }
+    function down(e) {dragging=true;lastX=e.clientX;lastY=e.clientY;canvas.setPointerCapture(e.pointerId);}
+    function move(e) {if(!dragging)return;yaw+=(e.clientX-lastX)*.012;pitch=clamp(pitch+(e.clientY-lastY)*.012,-1.5,1.5);lastX=e.clientX;lastY=e.clientY;draw();}
+    function up(){dragging=false;}
+    function wheel(e){e.preventDefault();zoom=clamp(zoom*Math.exp(-e.deltaY*.001),.65,1.7);draw();}
+    function reset(){yaw=-.38;pitch=-.27;zoom=1;draw();}
+    function key(e){if(e.key==='ArrowLeft')yaw-=.12;else if(e.key==='ArrowRight')yaw+=.12;else if(e.key==='ArrowUp')pitch-=.12;else if(e.key==='ArrowDown')pitch+=.12;else if(e.key==='+'||e.key==='=')zoom=clamp(zoom*1.1,.65,1.7);else if(e.key==='-')zoom=clamp(zoom/1.1,.65,1.7);else return;e.preventDefault();draw();}
+    canvas.addEventListener('pointerdown',down);canvas.addEventListener('pointermove',move);
+    canvas.addEventListener('pointerup',up);canvas.addEventListener('pointercancel',up);
+    canvas.addEventListener('wheel',wheel,{passive:false});canvas.addEventListener('dblclick',reset);
+    canvas.addEventListener('keydown',key);
+    const observer=new ResizeObserver(resize);observer.observe(canvas);
+    resize();raf=requestAnimationFrame(frame);
+    atom3DController={dispose(){disposed=true;cancelAnimationFrame(raf);observer.disconnect();}};
+}
+
+
+/* =========================================================
+   SELECT ELEMENT
+========================================================= */
+
+
+/* Decorative tile landscape: distinct, lightweight SVG for each element. */
+function elementLandscape(element) {
+    const n = element.n;
+    const shift = (n * 17) % 45;
+    const peak = 40 + (n * 11) % 22;
+    const isTransition = element.category === 'transition';
+    const skyline = isTransition
+        ? `<path d="M0 112L23 ${peak+18} 43 84 68 ${peak-12} 90 77 115 ${peak+9} 144 101V144H0Z" fill="#061e36" opacity=".66"/><path d="M53 ${peak+9}L68 ${peak-12} 84 ${peak+8} 72 ${peak+4} 67 ${peak-3} 62 ${peak+8}Z" fill="#b1d8e8" opacity=".48"/>`
+        : `<path d="M0 116Q18 ${peak+30} 41 107T90 102T144 109V144H0Z" fill="#101a2a" opacity=".48"/>`;
+    const structure = (n % 4 === 0)
+        ? `<g fill="#061726" opacity=".85"><path d="M104 99h26v4h-26zM108 90h18v5h-18zM111 82h12v5h-12zM113 77h8v4h-8zM109 103h3v27h-3zM122 103h3v27h-3z"/></g>`
+        : (n % 4 === 1)
+        ? `<g fill="none" stroke="#f7d29b" stroke-width="2" opacity=".55"><path d="M98 110V83M129 110V83M91 83h45M95 77h37"/></g>`
+        : `<g fill="#081a2a" opacity=".7"><path d="M109 127V91h4v36M100 91h22l-11-10zM107 81h8l-4-8z"/></g>`;
+    const flowers = Array.from({length:4}, (_,i) => {
+        const x=(n*23+i*37)%140, y=85+(n*7+i*13)%54;
+        return `<path d="M${x} ${y-4}q4 3 0 7q-4-4 0-7" fill="#f9c9d5" opacity="${.27+i*.08}"/>`;
+    }).join('');
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 144" width="144" height="144"><defs><linearGradient id="night" x2="0" y2="1"><stop stop-color="#fff" stop-opacity=".06"/><stop offset="1" stop-color="#000" stop-opacity=".28"/></linearGradient></defs><path fill="url(#night)" d="M0 0h144v144H0z"/><g fill="#d7ebff" opacity=".3"><circle cx="${15+shift}" cy="22" r="1.5"/><circle cx="${102-shift/2}" cy="44" r="1"/><circle cx="120" cy="16" r="1.2"/></g><circle cx="${98+shift/3}" cy="57" r="17" fill="#f8db9b" opacity=".13"/>${skyline}${structure}<path d="M0 132Q28 126 50 133T100 132T144 134" fill="none" stroke="#f4c78c" stroke-width="2" opacity=".4"/>${flowers}</svg>`;
+    return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+}
+
+/* Each pattern is vector artwork generated locally; no external images required. */
+function japaneseMotif(category, seed) {
+    const n = seed || 0;
+    const turn = (n * 29) % 360;
+    const spacing = 76 + (n % 5) * 9;
+    const motifs = {
+      alkali: `<path d="M-12 55 Q18 8 49 52 T112 52 T180 52"/><path d="M-12 75 Q18 28 49 72 T112 72 T180 72"/><path d="M-12 95 Q18 48 49 92 T112 92 T180 92"/>`,
+      alkaline: `<path d="M-10 50 Q30 10 70 50 T150 50 M-10 90 Q30 50 70 90 T150 90"/><circle cx="70" cy="65" r="21"/>`,
+      transition: `<path d="M0 0L72 72L144 0M0 72L72 0L144 72M0 144L72 72L144 144M0 72L72 144L144 72"/><path d="M36 0V144M108 0V144"/>`,
+      'post-transition': `<path d="M24 144V0M64 144V0M104 144V0M0 28H144M0 84H144"/><path d="M24 28Q64 2 104 28M24 84Q64 58 104 84"/>`,
+      metalloid: `<path d="M72 8L136 72L72 136L8 72Z M72 30L114 72L72 114L30 72Z"/><path d="M72 8V136M8 72H136"/>`,
+      nonmetal: `<path d="M-24 40a48 48 0 0 1 96 0M0 40a24 24 0 0 1 48 0M48 40a48 48 0 0 1 96 0M72 40a24 24 0 0 1 48 0M-24 112a48 48 0 0 1 96 0M0 112a24 24 0 0 1 48 0M48 112a48 48 0 0 1 96 0M72 112a24 24 0 0 1 48 0"/>`,
+      halogen: `<path d="M72 18Q91 43 72 72Q53 43 72 18M72 72Q98 49 127 72Q98 95 72 72M72 72Q91 99 72 127Q53 99 72 72M72 72Q46 49 17 72Q46 95 72 72"/><circle cx="72" cy="72" r="9"/>`,
+      noble: `<circle cx="72" cy="72" r="49"/><circle cx="72" cy="72" r="30"/><circle cx="72" cy="72" r="11"/><path d="M72 0V144M0 72H144"/>`,
+      lanthanide: `<path d="M0 144Q24 12 48 144Q72 12 96 144Q120 12 144 144"/><path d="M0 118Q24 -14 48 118Q72 -14 96 118Q120 -14 144 118"/>`,
+      actinide: `<path d="M0 0Q72 72 144 0M0 36Q72 108 144 36M0 72Q72 144 144 72M0 108Q72 180 144 108"/><path d="M36 0V144M108 0V144"/>`
+    };
+    const art = motifs[category] || motifs.nonmetal;
+    const extra = seed ? `<g transform="translate(${20 + (n * 13) % 98} ${20 + (n * 19) % 98}) rotate(${turn})" fill="white" fill-opacity=".25" stroke="none"><path d="M0 -12L4 -4L12 0L4 4L0 12L-4 4L-12 0L-4 -4Z"/></g><circle cx="${(n * 23) % 144}" cy="${(n * 37) % 144}" r="${3+n%6}" fill="white" fill-opacity=".2" stroke="none"/>` : '';
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="144" height="144" viewBox="0 0 144 144"><g fill="none" stroke="#fff7e6" stroke-width="2.4" stroke-opacity=".48" stroke-linejoin="round" transform="rotate(${seed ? turn / 5 : 0} 72 72)">${art}</g>${extra}</svg>`;
+    return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+}
+
+
+/* Subshell configurations: Aufbau order with documented ground-state exceptions. */
+const orbitalOrder = [
+    ['1s',2],['2s',2],['2p',6],['3s',2],['3p',6],['4s',2],['3d',10],
+    ['4p',6],['5s',2],['4d',10],['5p',6],['6s',2],['4f',14],['5d',10],
+    ['6p',6],['7s',2],['5f',14],['6d',10],['7p',6]
+];
+const configExceptions = {
+    24:{'4s':1,'3d':5}, 29:{'4s':1,'3d':10},
+    41:{'5s':1,'4d':4},42:{'5s':1,'4d':5},44:{'5s':1,'4d':7},
+    45:{'5s':1,'4d':8},46:{'5s':0,'4d':10},47:{'5s':1,'4d':10},
+    57:{'4f':0,'5d':1},58:{'4f':1,'5d':1},64:{'4f':7,'5d':1},
+    78:{'6s':1,'5d':9},79:{'6s':1,'5d':10},
+    89:{'5f':0,'6d':1},90:{'5f':0,'6d':2},91:{'5f':2,'6d':1},
+    92:{'5f':3,'6d':1},93:{'5f':4,'6d':1},96:{'5f':7,'6d':1},
+    103:{'6d':0,'7p':1},110:{'7s':1,'6d':9},111:{'7s':1,'6d':10}
+};
+const nobleCores = [[2,'He'],[10,'Ne'],[18,'Ar'],[36,'Kr'],[54,'Xe'],[86,'Rn']];
+function orbitalOccupancy(atomicNumber) {
+    let remaining = atomicNumber;
+    const occupancy = {};
+    orbitalOrder.forEach(([orbital, capacity]) => {
+        const amount = Math.min(capacity, remaining);
+        occupancy[orbital] = amount;
+        remaining -= amount;
+    });
+    Object.assign(occupancy, configExceptions[atomicNumber] || {});
+    return occupancy;
+}
+function formatConfiguration(occupancy, omitCore = 0) {
+    let toOmit = omitCore;
+    return orbitalOrder.map(([orbital, capacity]) => {
+        const count = occupancy[orbital] || 0;
+        const omitted = Math.min(count, Math.max(0, toOmit));
+        toOmit -= omitted;
+        const shown = count - omitted;
+        return shown ? `${orbital}<sup>${shown}</sup>` : '';
+    }).filter(Boolean).join(' ');
+}
+function configurationText(html) {
+    const div = document.createElement('div');
+    div.innerHTML = html.replace(/<sup>(\d+)<\/sup>/g, '^$1');
+    return div.textContent;
+}
+function updateConfiguration(element) {
+    const occupancy = orbitalOccupancy(element.n);
+    const full = formatConfiguration(occupancy);
+    const core = [...nobleCores].reverse().find(([number]) => number < element.n);
+    const abbreviated = core ? `[${core[1]}] ${formatConfiguration(occupancy, core[0])}` : full;
+    document.getElementById('configurationFull').innerHTML = full;
+    document.getElementById('configurationShort').innerHTML = abbreviated;
+    document.getElementById('configurationNote').textContent = element.n >= 104
+        ? (currentLanguage === 'vi' ? 'Cấu hình electron dự đoán; cấu trúc của các nguyên tố siêu nặng chưa được xác nhận đầy đủ bằng thực nghiệm.' : 'Predicted electron configuration; superheavy-element structures may not be experimentally confirmed.')
+        : (currentLanguage === 'vi' ? 'Cấu hình electron trạng thái cơ bản của nguyên tử trung hòa.' : 'Ground-state electron configuration of a neutral atom.');
+    document.querySelectorAll('[data-copy-config]').forEach(button => {
+        button.dataset.copyText = configurationText(button.dataset.copyConfig === 'full' ? full : abbreviated);
+    });
+}
+document.querySelectorAll('[data-copy-config]').forEach(button => {
+    button.addEventListener('click', async () => {
+        const text = button.dataset.copyText || '';
+        try {
+            await navigator.clipboard.writeText(text);
+            button.textContent = currentLanguage === 'vi' ? 'Đã sao chép!' : 'Copied!';
+            setTimeout(() => button.textContent = currentLanguage === 'vi' ? 'Sao chép' : 'Copy', 1400);
+        } catch (error) {
+            const field = document.createElement('textarea');
+            field.value = text;
+            document.body.appendChild(field);
+            field.select();
+            document.execCommand('copy');
+            field.remove();
+            button.textContent = currentLanguage === 'vi' ? 'Đã sao chép!' : 'Copied!';
+            setTimeout(() => button.textContent = currentLanguage === 'vi' ? 'Sao chép' : 'Copy', 1400);
+        }
+    });
+});
+
+
+/* Carefully sourced initial entries. All other elements explicitly remain pending review. */
+const VERIFIED_ENCYCLOPEDIA = {
+  6: {
+    overview: {en:'Carbon forms several allotropes, including diamond and graphite, and is central to the chemistry of living things.',vi:'Carbon tồn tại ở nhiều dạng thù hình, trong đó có kim cương và than chì, đồng thời giữ vai trò trung tâm trong hóa học của sự sống.'},
+    physical: [
+      ['State at 20°C','Trạng thái ở 20°C','Solid','Chất rắn'],
+      ['Density: graphite','Khối lượng riêng: than chì','2.2 g/cm³','2,2 g/cm³'],
+      ['Density: diamond','Khối lượng riêng: kim cương','3.513 g/cm³','3,513 g/cm³'],
+      ['Phase change','Chuyển pha','Sublimes at about 3825°C (RSC reference conditions)','Thăng hoa ở khoảng 3825°C (theo điều kiện tham chiếu của RSC)']
+    ],
+    chemical: {en:'Carbon can form strong bonds with itself, producing chains and many other structures. Its allotropes have very different physical properties.',vi:'Carbon có thể tạo liên kết bền với chính nó, hình thành chuỗi và nhiều cấu trúc khác. Các dạng thù hình của carbon có tính chất vật lí rất khác nhau.'},
+    uses: {en:'Graphite is used in pencils and electrodes; activated carbon in filtration; diamond in cutting and drilling; carbon fibres in lightweight composites.',vi:'Than chì được dùng trong bút chì và điện cực; carbon hoạt tính dùng để lọc; kim cương dùng để cắt và khoan; sợi carbon dùng trong vật liệu composite nhẹ.'},
+    sources:[['Royal Society of Chemistry','https://periodic-table.rsc.org/element/6/carbon']]
+  },
+  26: {
+    overview:{en:'Iron is a widely used transition metal. Most refined iron goes into steel, and iron is also essential to oxygen transport in the human body.',vi:'Iron là kim loại chuyển tiếp được sử dụng rộng rãi. Phần lớn iron tinh luyện được dùng để sản xuất thép; nguyên tố này cũng thiết yếu đối với quá trình vận chuyển oxy trong cơ thể.'},
+    physical:[
+      ['State at 20°C','Trạng thái ở 20°C','Solid','Chất rắn'],
+      ['Density','Khối lượng riêng','7.87 g/cm³','7,87 g/cm³'],
+      ['Melting point','Nhiệt độ nóng chảy','1538°C','1538°C'],
+      ['Boiling point','Nhiệt độ sôi','2861°C','2861°C']
+    ],
+    chemical:{en:'Iron commonly forms compounds containing Fe(II) and Fe(III). In damp air, iron can corrode and form rust.',vi:'Iron thường tạo hợp chất chứa Fe(II) và Fe(III). Trong không khí ẩm, iron có thể bị ăn mòn và tạo gỉ.'},
+    uses:{en:'Iron is primarily used to manufacture steel for buildings, bridges, vehicles and machinery. Iron-based catalysts are also used in industrial chemistry.',vi:'Iron chủ yếu được dùng sản xuất thép cho công trình, cầu, phương tiện và máy móc. Chất xúc tác chứa iron cũng được sử dụng trong công nghiệp hóa học.'},
+    sources:[['Royal Society of Chemistry','https://periodic-table.rsc.org/element/26/iron']]
+  }
+};
+
+/* Reference-level profiles for all elements. These are NOT marked as fully verified
+   encyclopedia entries; detailed properties and uses require individual source review. */
+const ELEMENT_STATES_GAS = new Set([1,2,7,8,9,10,17,18,36,54,86]);
+const ELEMENT_STATES_LIQUID = new Set([35,80]);
+const ELEMENT_STATES_UNCERTAIN = new Set([104,105,106,107,108,109,110,111,112,113,114,115,116,117,118]);
+const CATEGORY_CONTEXT = {
+  alkali:['Alkali metals generally react readily and tend to form +1 ions.','Kim loại kiềm nhìn chung dễ phản ứng và thường tạo ion mang điện tích +1.'],
+  alkaline:['Alkaline earth metals commonly form +2 ions.','Kim loại kiềm thổ thường tạo ion mang điện tích +2.'],
+  transition:['Transition metals often exhibit variable oxidation states; behavior depends on the element.','Nhiều kim loại chuyển tiếp có nhiều số oxi hóa; tính chất cụ thể tùy nguyên tố.'],
+  'post-transition':['This metal belongs to the post-transition region; its chemistry must be considered individually.','Kim loại này thuộc vùng sau chuyển tiếp; cần xem xét riêng tính chất hóa học của từng nguyên tố.'],
+  metalloid:['Metalloids have properties intermediate between typical metals and nonmetals.','Á kim có những tính chất trung gian giữa kim loại và phi kim điển hình.'],
+  nonmetal:['Nonmetals display varied bonding and reactivity depending on the element.','Phi kim có kiểu liên kết và mức độ phản ứng đa dạng tùy nguyên tố.'],
+  halogen:['Halogens are group 17 elements and often form compounds with metals.','Halogen thuộc nhóm 17 và thường tạo hợp chất với kim loại.'],
+  noble:['Noble gases are generally relatively unreactive, although some can form compounds.','Khí hiếm nhìn chung ít phản ứng, dù một số nguyên tố vẫn có thể tạo hợp chất.'],
+  lanthanide:['Lanthanides are metallic elements with closely related chemistry, often featuring the +3 oxidation state.','Các nguyên tố họ Lanthanide là kim loại có tính chất hóa học gần nhau, thường gặp số oxi hóa +3.'],
+  actinide:['Actinides are radioactive elements; their chemical behavior varies considerably.','Các nguyên tố họ Actinide có tính phóng xạ; tính chất hóa học của chúng khá đa dạng.']
+};
+function referenceProfile(element) {
+  const vi=currentLanguage==='vi';
+  const context=CATEGORY_CONTEXT[element.category] || ['Properties depend on the element.','Tính chất phụ thuộc từng nguyên tố.'];
+  const state=ELEMENT_STATES_UNCERTAIN.has(element.n)
+    ? [ 'Not reliably established', 'Chưa được xác định đáng tin cậy' ]
+    : ELEMENT_STATES_GAS.has(element.n) ? ['Gas','Khí']
+    : ELEMENT_STATES_LIQUID.has(element.n) ? ['Liquid','Lỏng'] : ['Solid','Rắn'];
+  return {
+    overview: vi
+      ? `${element.name} (số hiệu nguyên tử ${element.n}) thuộc nhóm ${element.category.replaceAll("-"," ")}. ${context[1]}`
+      : `${element.name} (atomic number ${element.n}) belongs to the ${element.category.replaceAll("-"," ")} category. ${context[0]}`,
+    state:state[vi?1:0], chemical:context[vi?1:0],
+    source:`https://periodic-table.rsc.org/element/${element.n}`
+  };
+}
+
+function renderEncyclopedia(element) {
+  const host=document.getElementById('elementEncyclopedia');
+  if (!host) return;
+  const vi=currentLanguage==='vi', entry=VERIFIED_ENCYCLOPEDIA[element.n];
+  host.replaceChildren();
+  const heading=document.createElement('h3');heading.textContent=vi?'Khám phá nguyên tố':'Explore this element';host.append(heading);
+  const intro=document.createElement('div');intro.className='encyclopedia-intro';
+  intro.textContent=entry?entry.overview[vi?'vi':'en']:(vi?'Nội dung chuyên sâu của nguyên tố này đang chờ kiểm chứng. Không hiển thị dữ liệu chưa xác minh.':'This element’s extended profile is awaiting verification. Unverified facts are not displayed.');
+  host.append(intro);
+  if (!entry) {
+    const ref=referenceProfile(element);
+    intro.textContent=ref.overview;
+    const make=(title,value)=>{const d=document.createElement('details');const s=document.createElement('summary');s.textContent=title;const b=document.createElement('div');b.className='encyclopedia-body';b.textContent=value;d.append(s,b);host.append(d);};
+    make(vi?'Tính chất vật lí':'Physical properties',(vi?'Trạng thái ở khoảng 20°C: ':'State near 20°C: ')+ref.state);
+    make(vi?'Tính chất hóa học':'Chemical properties',ref.chemical);
+    make(vi?'Ứng dụng thực tế':'Real-world applications',vi?'Ứng dụng cụ thể cần được đối chiếu theo nguồn khoa học cho nguyên tố này. Xem liên kết tham khảo bên dưới.':'Element-specific applications are pending individual source review. See the reference below.');
+    const d=document.createElement('details');const summary=document.createElement('summary');summary.textContent=vi?'Nguồn tham khảo':'Sources';
+    const body=document.createElement('div');body.className='encyclopedia-body';
+    const a=document.createElement('a');a.href=ref.source;a.target='_blank';a.rel='noopener noreferrer';a.textContent='Royal Society of Chemistry — '+element.name;
+    body.append(a);d.append(summary,body);host.append(d);
+    const status=document.createElement('p');status.className='review-status';status.textContent=vi?'Hồ sơ cơ bản · Các số liệu chi tiết và ứng dụng đang chờ xác minh riêng.':'Basic reference profile · Detailed measurements and applications pending individual verification.';host.append(status);
+    return;
+  }
+  const addSection=(title,fill,open=false)=>{
+    const d=document.createElement('details');d.open=open;
+    const summary=document.createElement('summary');summary.textContent=title;
+    const body=document.createElement('div');body.className='encyclopedia-body';fill(body);
+    d.append(summary,body);host.append(d);
+  };
+  addSection(vi?'Tính chất vật lí':'Physical properties',body=>{
+    entry.physical.forEach(f=>{const row=document.createElement('div');row.className='fact';const label=document.createElement('span');label.textContent=f[vi?1:0];const value=document.createElement('span');value.textContent=f[vi?3:2];row.append(label,value);body.append(row);});
+  },true);
+  addSection(vi?'Tính chất hóa học':'Chemical properties',body=>{body.textContent=entry.chemical[vi?'vi':'en'];});
+  addSection(vi?'Ứng dụng thực tế':'Real-world applications',body=>{body.textContent=entry.uses[vi?'vi':'en'];});
+  addSection(vi?'Nguồn tham khảo':'Sources',body=>{
+    entry.sources.forEach(([label,url])=>{const a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener noreferrer';a.textContent=label;body.append(a);});
+    const note=document.createElement('p');note.className='review-status';note.textContent=vi?'Các giá trị phụ thuộc điều kiện đo hoặc dạng thù hình nếu có ghi chú.':'Values may depend on measurement conditions or allotrope as noted.';body.append(note);
+  });
+}
+
+function selectElement(element, openPanel = true) {
+    if (openPanel) openElementPanel();
+    selectedElement = element;
+    const japanesePalettes = {
+        alkali: ["#b54b4b", "#802e3a"],
+        alkaline: ["#c17a36", "#805128"],
+        transition: ["#456d88", "#25465d"],
+        "post-transition": ["#64856b", "#3d604c"],
+        metalloid: ["#8c6eac", "#60477c"],
+        nonmetal: ["#5b8c81", "#32665d"],
+        halogen: ["#b66a92", "#7c426d"],
+        noble: ["#a36caa", "#713a7d"],
+        lanthanide: ["#bf7a8e", "#88495e"],
+        actinide: ["#aa6751", "#774235"]
+    };
+    const palette = japanesePalettes[element.category] || japanesePalettes.nonmetal;
+    // A different motif variation and nuanced color for each atomic number.
+    infoPanel.style.setProperty('--japanese-pattern', japaneseMotif(element.category, element.n));
+    const variation = (element.n * 7) % 19 - 9;
+    const shiftColor = (hex, amount) => {
+        const parts = [1, 3, 5].map(i => parseInt(hex.slice(i, i+2), 16));
+        return '#' + parts.map(v => Math.max(0, Math.min(255, v + amount)).toString(16).padStart(2, '0')).join('');
+    };
+    infoPanel.style.setProperty("--japan-base", shiftColor(palette[0], variation));
+    infoPanel.style.setProperty("--japan-ink", shiftColor(palette[1], variation));
+    const japaneseHeader = infoPanel.querySelector(".info-heading");
+    japaneseHeader.dataset.elementName = displayName(element);
+    japaneseHeader.classList.remove("reveal");
+    void japaneseHeader.offsetWidth;
+    japaneseHeader.classList.add("reveal");
+
+
+    /*
+       Update information panel.
+    */
+
+    infoSymbol.textContent =
+        element.s;
+
+    infoName.textContent =
+        displayName(element);
+
+    infoCategory.textContent = categoryLabel(element.category);
+
+    infoNumber.textContent =
+        element.n;
+
+    infoMass.textContent =
+        element.mass;
+
+    infoPeriod.textContent =
+        element.period;
+
+    infoGroup.textContent =
+        displayGroup(element);
+
+    infoShells.textContent =
+        element.shells.join(", ");
+
+    const valence =
+        element.shells[
+            element.shells.length - 1
+        ];
+
+    infoValence.textContent =
+        valence;
+
+    infoDescription.textContent =
+        getDescription(element);
+    renderEncyclopedia(element);
+
+
+    /*
+       Generate electron diagram.
+    */
+
+    createElectronDiagram(element);
+    updateConfiguration(element);
+
+
+    /*
+       Highlight selected card.
+    */
+
+    document
+        .querySelectorAll(".element")
+        .forEach(card => {
+
+            card.style.outline = "";
+
+            if (
+                Number(card.dataset.number) ===
+                element.n
+            ) {
+                card.style.outline =
+                    "2px solid #60a5fa";
+                card.style.outlineOffset =
+                    "2px";
+            }
+        });
+}
+
+
+/* =========================================================
+   SEARCH
+========================================================= */
+
+function performSearch() {
+
+    const query =
+        searchInput.value
+            .trim()
+            .toLowerCase();
+
+
+    const cards =
+        document.querySelectorAll(".element");
+
+
+    if (!query) {
+
+        cards.forEach(card => {
+            card.classList.remove("dimmed");
+        });
+
+        return;
+    }
+
+
+    cards.forEach(card => {
+
+        const matches =
+            card.dataset.number === query ||
+            (card.dataset.name.includes(query) || card.dataset.viName.includes(query)) ||
+            card.dataset.symbol === query;
+
+        card.classList.toggle(
+            "dimmed",
+            !matches
+        );
+    });
+}
+
+
+searchInput.addEventListener(
+    "input",
+    performSearch
+);
+
+
+clearSearch.addEventListener(
+    "click",
+    () => {
+
+        searchInput.value = "";
+
+        performSearch();
+
+        searchInput.focus();
+    }
+);
+
+
+
+/* Category descriptions: explanations, not redundant element lists. */
+const CATEGORY_EXPLANATIONS = {
+  all: {
+    en:['Why are elements classified?','The periodic table arranges elements by atomic number. Elements in the same column often have similar valence-electron structures and chemical behavior; the colored categories also group elements by broader shared properties.'],
+    vi:['Vì sao các nguyên tố được phân loại?','Bảng tuần hoàn sắp xếp các nguyên tố theo số hiệu nguyên tử. Các nguyên tố cùng cột thường có cấu trúc electron hóa trị và tính chất hóa học tương tự; các nhóm màu còn phân loại theo những đặc điểm chung rộng hơn.']
+  },
+  alkali: {
+    en:['Alkali metals','These Group 1 metals (excluding hydrogen) have one valence electron. They readily lose it to form +1 ions and are generally highly reactive.'],
+    vi:['Kim loại kiềm','Các kim loại nhóm IA (không bao gồm Hydrogen) có một electron hóa trị. Chúng dễ nhường electron này để tạo ion +1 và thường phản ứng rất mạnh.']
+  },
+  alkaline: {
+    en:['Alkaline earth metals','These Group 2 metals have two valence electrons and commonly form +2 ions. They share characteristic metallic and reactive behavior, although reactivity varies across the group.'],
+    vi:['Kim loại kiềm thổ','Các kim loại nhóm IIA có hai electron hóa trị và thường tạo ion +2. Chúng có những tính chất kim loại và khả năng phản ứng tương đồng, nhưng mức độ phản ứng khác nhau giữa các nguyên tố.']
+  },
+  transition: {
+    en:['Transition metals','These metals occupy the central d-block region. Many form ions with incomplete d subshells, show multiple oxidation states, and form coordination compounds; individual properties vary.'],
+    vi:['Kim loại chuyển tiếp','Các kim loại này nằm ở vùng khối d giữa bảng tuần hoàn. Nhiều nguyên tố tạo ion có phân lớp d chưa bão hòa, có nhiều số oxi hóa và tạo hợp chất phối trí; tính chất cụ thể có thể khác nhau.']
+  },
+  'post-transition': {
+    en:['Post-transition metals','This conventional category covers several metals beyond the d-block. They generally show metallic bonding but often have lower melting points or different bonding behavior than many transition metals; the exact membership varies by source.'],
+    vi:['Kim loại sau chuyển tiếp','Đây là nhóm phân loại quy ước gồm một số kim loại nằm sau khối d. Chúng có liên kết kim loại nhưng thường có nhiệt độ nóng chảy thấp hơn hoặc kiểu liên kết khác nhiều kim loại chuyển tiếp; cách xếp loại có thể khác nhau giữa các nguồn.']
+  },
+  metalloid: {
+    en:['Metalloids','Metalloids have a mixture of metallic and nonmetallic characteristics. Several are semiconductors, and the boundary between metalloids and other categories is not universally agreed upon.'],
+    vi:['Á kim','Á kim thể hiện cả đặc điểm của kim loại và phi kim. Một số là chất bán dẫn; ranh giới phân loại giữa á kim và các nhóm khác chưa hoàn toàn thống nhất.']
+  },
+  nonmetal: {
+    en:['Nonmetals','These elements generally lack typical metallic properties and often form covalent bonds. Their physical states and reactivities vary greatly, so the category describes broad similarities rather than identical behavior.'],
+    vi:['Phi kim','Các nguyên tố này nhìn chung không có những tính chất đặc trưng của kim loại và thường tạo liên kết cộng hóa trị. Trạng thái vật chất và khả năng phản ứng rất đa dạng, vì vậy đây là nhóm có các đặc điểm chung chứ không hoàn toàn giống nhau.']
+  },
+  halogen: {
+    en:['Halogens','Group 17 elements have seven valence electrons in their neutral atoms. They often gain or share one electron in compounds and commonly form salts with metals; reactivity varies down the group.'],
+    vi:['Halogen','Các nguyên tố nhóm VIIA có bảy electron hóa trị trong nguyên tử trung hòa. Chúng thường nhận hoặc dùng chung một electron khi tạo hợp chất và dễ tạo muối với kim loại; mức độ phản ứng thay đổi trong nhóm.']
+  },
+  noble: {
+    en:['Noble gases','Group 18 elements have filled outer electron shells (helium has two electrons). This makes most of them relatively unreactive, although some heavier noble gases can form compounds.'],
+    vi:['Khí hiếm','Các nguyên tố nhóm VIIIA có lớp electron ngoài cùng đã bão hòa (Helium có hai electron). Vì vậy, phần lớn khá kém hoạt động hóa học, dù một số khí hiếm nặng vẫn có thể tạo hợp chất.']
+  },
+  lanthanide: {
+    en:['Lanthanides','This series is associated with filling the 4f subshell. Many members show similar chemistry, commonly form +3 ions, and are often discussed together as rare-earth elements.'],
+    vi:['Họ Lantan','Dãy nguyên tố này gắn với sự điền electron vào phân lớp 4f. Nhiều nguyên tố có tính chất hóa học tương tự, thường tạo ion +3 và hay được nghiên cứu cùng nhóm đất hiếm.']
+  },
+  actinide: {
+    en:['Actinides','This series is associated with the 5f subshell. All actinides are radioactive, and several can exhibit multiple oxidation states; many heavier members are synthetic and poorly characterized.'],
+    vi:['Họ Actini','Dãy nguyên tố này gắn với phân lớp 5f. Tất cả đều có tính phóng xạ; một số có nhiều số oxi hóa. Nhiều nguyên tố nặng trong dãy được tổng hợp nhân tạo và chưa được nghiên cứu đầy đủ.']
+  }
+};
+function updateCategoryExplanation(){
+  const key=document.querySelector('.legend button.active')?.dataset.category || 'all';
+  const entry=CATEGORY_EXPLANATIONS[key] || CATEGORY_EXPLANATIONS.all;
+  const [heading,description]=entry[currentLanguage==='vi'?'vi':'en'];
+  document.getElementById('categoryExplanationHeading').textContent=heading;
+  document.getElementById('categoryExplanationText').textContent=description;
+}
+
+/* =========================================================
+   CATEGORY FILTER
+========================================================= */
+
+document
+    .querySelectorAll(".legend button")
+    .forEach(button => {
+
+        button.addEventListener(
+            "click",
+            () => {
+
+                document
+                    .querySelectorAll(".legend button")
+                    .forEach(btn =>
+                        btn.classList.remove("active")
+                    );
+
+                button.classList.add("active");
+                updateCategoryExplanation();
+
+
+                const category =
+                    button.dataset.category;
+
+
+                document
+                    .querySelectorAll(".element")
+                    .forEach(card => {
+
+                        if (
+                            category === "all"
+                        ) {
+
+                            card.classList.remove(
+                                "dimmed"
+                            );
+
+                        } else {
+
+                            card.classList.toggle(
+                                "dimmed",
+                                card.dataset.category !==
+                                category
+                            );
+                        }
+                    });
+            }
+        );
+    });
+
+
+/* =========================================================
+   BACK TO TABLE
+========================================================= */
+
+const panelBackdrop = document.getElementById('panelBackdrop');
+const panelExpand = document.getElementById('panelExpand');
+const panelClose = document.getElementById('panelClose');
+let panelLastFocus = null;
+function updatePanelLanguage(){
+  const vi = currentLanguage === 'vi';
+  document.getElementById('panelEyebrow').textContent = vi ? 'THÔNG TIN NGUYÊN TỐ' : 'ELEMENT PREVIEW';
+  panelExpand.textContent = document.body.classList.contains('panel-expanded')
+    ? (vi ? '← Xem nhanh' : '← Quick View')
+    : (vi ? 'Khám phá chi tiết ↗' : 'Explore in Detail ↗');
+  panelExpand.setAttribute('aria-expanded',String(document.body.classList.contains('panel-expanded')));
+  panelClose.setAttribute('aria-label',vi?'Đóng bảng thông tin':'Close information panel');
+}
+function openElementPanel(){
+  if(!document.body.classList.contains('panel-open')) panelLastFocus=document.activeElement;
+  document.body.classList.add('panel-open');
+  document.body.classList.remove('panel-expanded');
+  infoPanel.scrollTop=0;
+  updatePanelLanguage();
+  panelClose.focus({preventScroll:true});
+}
+function closeElementPanel(){
+  document.body.classList.remove('panel-open','panel-expanded');
+  updatePanelLanguage();
+  if(panelLastFocus && panelLastFocus.isConnected) panelLastFocus.focus({preventScroll:true});
+}
+panelExpand.addEventListener('click',()=>{
+  document.body.classList.toggle('panel-expanded');
+  infoPanel.scrollTop=0;
+  updatePanelLanguage();
+});
+panelClose.addEventListener('click',closeElementPanel);
+panelBackdrop.addEventListener('click',closeElementPanel);
+backButton.addEventListener('click',closeElementPanel);
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape' && document.body.classList.contains('panel-open')) closeElementPanel();
+  if(e.key==='Tab' && document.body.classList.contains('panel-open')){
+    const focusable=[...infoPanel.querySelectorAll('button:not([disabled]),a[href],input,select,[tabindex]:not([tabindex="-1"])')].filter(el=>el.getClientRects().length);
+    if(!focusable.length)return;
+    const first=focusable[0],last=focusable[focusable.length-1];
+    if(e.shiftKey && document.activeElement===first){e.preventDefault();last.focus()}
+    else if(!e.shiftKey && document.activeElement===last){e.preventDefault();first.focus()}
+  }
+});
+
+/* =========================================================
+   KEYBOARD SEARCH
+========================================================= */
+
+searchInput.addEventListener(
+    "keydown",
+    event => {
+
+        if (event.key !== "Enter") {
+            return;
+        }
+
+        const query =
+            searchInput.value
+                .trim()
+                .toLowerCase();
+
+        if (!query) return;
+
+
+        const match =
+            elements.find(element =>
+                String(element.n) === query ||
+                element.s.toLowerCase() === query ||
+                (element.name.toLowerCase() === query || viName(element).toLocaleLowerCase("vi") === query)
+            );
+
+
+        if (match) {
+            selectElement(match);
+        }
+    }
+);
+
+
+
+/* =========================================================
+   BILINGUAL CHEMISTRY QUIZ (10 questions per round)
+   Facts are derived from the existing 118-element dataset.
+========================================================= */
+const quizUI = {
+  overlay:document.getElementById('chemQuizOverlay'),dialog:document.querySelector('.quiz-dialog'),
+  heading:document.getElementById('quizHeading'),intro:document.getElementById('quizIntro'),
+  question:document.getElementById('quizQuestion'),options:document.getElementById('quizOptions'),
+  feedback:document.getElementById('quizFeedback'),score:document.getElementById('quizScore'),
+  next:document.getElementById('quizNext'),progress:document.getElementById('quizProgress')
+};
+let quizQuestions=[],quizIndex=0,quizCorrect=0,quizAnswered=false,quizPreviousFocus=null;
+const quizText = {
+ en:{title:'Chemistry Quiz',intro:'10 questions · Elements, symbols, atomic numbers and periods',
+ score:'Score',next:'Next question',results:'Round complete!',again:'Play again',
+ correct:'Correct!',wrong:'Not quite.',answer:'Correct answer:',
+ questions:[e=>`What is the symbol for ${e.name}?`,e=>`Which element has the symbol ${e.s}?`,
+ e=>`What is the atomic number of ${e.name}?`,e=>`Which period contains ${e.name}?`]},
+ vi:{title:'Trắc nghiệm hóa học',intro:'10 câu hỏi · Nguyên tố, kí hiệu, số hiệu nguyên tử và chu kì',
+ score:'Điểm',next:'Câu tiếp theo',results:'Hoàn thành lượt chơi!',again:'Chơi lại',
+ correct:'Chính xác!',wrong:'Chưa đúng.',answer:'Đáp án đúng:',
+ questions:[e=>`Kí hiệu hóa học của ${e.name} là gì?`,e=>`Nguyên tố nào có kí hiệu ${e.s}?`,
+ e=>`Số hiệu nguyên tử của ${e.name} là bao nhiêu?`,e=>`${e.name} thuộc chu kì nào?`]}
+};
+const quizShuffle = arr => {const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+function createQuizQuestion(element,type){
+ const value = (e)=>type===0?e.s:type===1?e.name:type===2?String(e.n):String(e.period);
+ const answer=value(element);
+ const pool=quizShuffle([...new Set(elements.map(value).filter(x=>x!==answer))]);
+ const options=quizShuffle([answer,...pool.slice(0,3)]);
+ return {element,type,answer,options};
+}
+function startChemQuiz(){
+ const chosen=quizShuffle(elements).slice(0,10);
+ quizQuestions=chosen.map((e,i)=>createQuizQuestion(e,i%4));
+ quizIndex=0;quizCorrect=0;renderChemQuiz();
+}
+function renderChemQuiz(){
+ const t=quizText[currentLanguage==='vi'?'vi':'en'];
+ quizUI.heading.textContent=t.title;quizUI.intro.textContent=t.intro;
+ quizUI.options.replaceChildren();quizUI.feedback.textContent='';quizAnswered=false;
+ quizUI.progress.style.width=`${quizIndex/quizQuestions.length*100}%`;
+ quizUI.score.textContent=`${t.score}: ${quizCorrect} / ${quizQuestions.length}`;
+ if(quizIndex>=quizQuestions.length){
+   quizUI.question.textContent=`${t.results} ${quizCorrect} / ${quizQuestions.length}`;
+   quizUI.progress.style.width='100%';quizUI.next.hidden=false;quizUI.next.textContent=t.again;return;
+ }
+ const q=quizQuestions[quizIndex];quizUI.question.textContent=`${quizIndex+1}. ${t.questions[q.type](q.element)}`;
+ quizUI.next.hidden=true;quizUI.next.textContent=t.next;
+ q.options.forEach(opt=>{
+  const button=document.createElement('button');button.type='button';button.className='quiz-option';button.textContent=opt;
+  button.addEventListener('click',()=>{
+   if(quizAnswered)return;quizAnswered=true;
+   const right=opt===q.answer;if(right)quizCorrect++;
+   quizUI.options.querySelectorAll('button').forEach(b=>{b.disabled=true;if(b.textContent===q.answer)b.classList.add('correct');else if(b===button)b.classList.add('incorrect')});
+   quizUI.feedback.textContent=right?t.correct:`${t.wrong} ${t.answer} ${q.answer}`;
+   quizUI.score.textContent=`${t.score}: ${quizCorrect} / ${quizQuestions.length}`;
+   quizUI.next.hidden=false;quizUI.next.focus();
+  });
+  quizUI.options.appendChild(button);
+ });
+}
+function openChemQuiz(){quizPreviousFocus=document.activeElement;quizUI.overlay.classList.add('open');document.body.style.overflow='hidden';startChemQuiz();document.getElementById('closeChemQuiz').focus()}
+function closeChemQuiz(){quizUI.overlay.classList.remove('open');document.body.style.overflow='';quizPreviousFocus?.focus()}
+document.getElementById('openChemQuiz').addEventListener('click',openChemQuiz);
+document.getElementById('closeChemQuiz').addEventListener('click',closeChemQuiz);
+quizUI.next.addEventListener('click',()=>{if(quizIndex>=quizQuestions.length)startChemQuiz();else{quizIndex++;renderChemQuiz()}});
+quizUI.overlay.addEventListener('click',e=>{if(e.target===quizUI.overlay)closeChemQuiz()});
+document.addEventListener('keydown',e=>{
+ if(!quizUI.overlay.classList.contains('open'))return;
+ if(e.key==='Escape'){e.preventDefault();closeChemQuiz();return}
+ if(e.key==='Tab'){
+  const focusable=[...quizUI.dialog.querySelectorAll('button:not([hidden]):not([disabled])')];
+  const first=focusable[0],last=focusable[focusable.length-1];
+  if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}
+  else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}
+ }
+});
+// Language changes re-render the current question without resetting the score.
+const originalSetLanguage=setLanguage;
+setLanguage=function(lang){originalSetLanguage(lang);if(quizUI.overlay.classList.contains('open'))renderChemQuiz()};
+
+/* =========================================================
+   INITIALIZE
+========================================================= */
+
+document.querySelectorAll('h1, .subtitle, .clear-btn, .legend button, .info-label, .info-card-label, .configuration-section h3, .configuration-label, .electron-section .section-title strong, .back-btn').forEach(node => {
+    node.dataset.originalText = node.textContent.trim();
+});
+document.getElementById('langEN').addEventListener('click', () => setLanguage('en'));
+document.getElementById('langVI').addEventListener('click', () => setLanguage('vi'));
+try { currentLanguage = localStorage.getItem('periodic-table-language') === 'vi' ? 'vi' : 'en'; } catch (e) {}
+translateStaticUI();
+updateCategoryExplanation();
+buildTable();
+
+
+/*
+   Start with Carbon selected.
+*/
+
+const defaultElement =
+    elements.find(e => e.n === 6);
+
+selectElement(defaultElement, false);
+
+</script>
+
+</body>
+</html>
